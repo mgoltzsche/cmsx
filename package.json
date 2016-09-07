@@ -1,0 +1,27 @@
+{
+	"name": "${project.artifactId}",
+	"version": "${project.version}",
+	"main": "js/cmsx.js",
+	"dependencies": {
+		"jquery": "~3.1.0"
+	},
+	"devDependencies": {
+		"gulp": "~3.9.1",
+		"jshint": "~2.9.3",
+		"gulp-jshint": "~2.0.1",
+		"gulp-sass": "~2.3.2",
+		"gulp-sourcemaps": "~1.6.0",
+		"gulp-uglify": "~2.0.0",
+		"gulp-iconfont": "~8.0.1",
+		"gulp-rename": "~1.2.2",
+		"gulp-consolidate": "~0.2.0",
+		"lodash": "~4.15.0",
+		"browserify": "~12.0.1",
+		"babelify": "~7.3.0",
+		"babel-eslint": "~6.1.2",
+		"vinyl-source-stream": "~1.1.0",
+		"vinyl-buffer": "~1.0.0",
+		"del": "~2.2.2",
+		"jshint-stylish": "~2.2.1"
+	}
+}

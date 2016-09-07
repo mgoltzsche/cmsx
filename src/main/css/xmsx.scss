@@ -1,0 +1,52 @@
+$backgroundColor: #ffffff;
+$backgroundColorHighlight: #f5f5f5;
+$borderColorLight: #eeeeee;
+$borderColor: #dddddd;
+$textColor: #333333;
+$actionColor: #3377cc;
+$borderRadius: 3px;
+$margin: 10px;
+$colorModPercent: 20%;
+
+@import "mixins.scss";
+@import "buttons.scss";
+@import "icons.scss";
+
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: $textColor;
+    font-size: 16px;
+    line-height: 1.1em;
+}
+
+.main {
+	margin: $margin 1%;
+
+	.application-header h1 {
+		font-size: 2em;
+	}
+
+	.application-footer {
+		margin: $margin 0 0 0;
+		text-align: center;
+		color: lighten($textColor, $colorModPercent);
+		font-size: 0.7em;
+	}
+}
+
+a {
+	&, &:visited {
+		text-decoration: none;
+		color: $actionColor;
+		outline: 0;
+	}
+
+	&:hover, &:focus, &:active {
+		text-decoration: underline;
+	}
+}

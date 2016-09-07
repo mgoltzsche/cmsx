@@ -1,0 +1,5 @@
+frontend-work/**
+target/**
+.settings/**
+.classpath
+.project
