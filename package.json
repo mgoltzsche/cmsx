@@ -3,7 +3,8 @@
 	"version": "${project.version}",
 	"main": "js/cmsx.js",
 	"dependencies": {
-		"jquery": "~3.1.0"
+		"jquery": "~3.1.0",
+		"medium-editor": "~5.22.0"
 	},
 	"devDependencies": {
 		"gulp": "~3.9.1",

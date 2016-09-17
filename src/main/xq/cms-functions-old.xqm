@@ -6,7 +6,11 @@ import module namespace functx = "http://www.functx.com";
 
 declare variable $cms:DATABASE as xs:string := 'testdb';
 
+(: Resolves given path to node relative to parent. E.g.: *, child/el, el/@attr, el[1] :)
 declare function cms:dynamic-path($parent as node(), $path as xs:string) as item()* {
+  if ($path = '')
+    then $parent
+    else
 	let $nextStep := functx:substring-before-if-contains($path,'/')
 	let $restOfSteps := substring-after($path,'/')
 	return if (contains($nextStep,'['))

@@ -6,9 +6,11 @@
 	xmlns:c="http://cms.algorythm.de/common/CMS"
 	xmlns:functx="http://www.functx.com"
 	exclude-result-prefixes="c">
-	
+	<xsl:param name="doc" />
+	<xsl:param name="xpath" select="''" />
+
 	<xsl:template match="c:article">
-		<article>
+		<article class="cmsx-richedit" data-cmsx-doc="{$doc}" data-cmsx-xpath="{$xpath}">
 			<xsl:apply-templates />
 		</article>
 	</xsl:template>
