@@ -71,6 +71,7 @@ function obj(o, d) {
 $(document).ready(function() {
 	createPageTitleEditor();
 
+	var brFixPattern = /<br\s*>/g;
 	/*
 	 * $('.cmsx-richedit').forEach(function() { var doc =
 	 * this.data('cmsx-document'), path = this.data('cmsx-path'); });
@@ -79,8 +80,13 @@ $(document).ready(function() {
 		anchorPreview : true,
 		disableReturn : false,
 		disableDoubleReturn : false,
-		disableExtraSpaces : false,
+		disableExtraSpaces : true, /* Creates html entities and is bad style */
 		spellcheck : false,
+		toolbar: {
+			static: true,
+			sticky: true,
+			updateOnEmptySelection: true
+		},
 		placeholder : {
 			text : 'Content',
 			hideOnClick : true
@@ -91,7 +97,7 @@ $(document).ready(function() {
 		var el = evt.target || evt.srcElement;
 		var doc = el.getAttribute('data-cmsx-doc');
 		var xpath = el.getAttribute('data-cmsx-xpath');
-		console.log(doc + ' ' + xpath + ' ' + serializeXML(el));
-		cmsx.updateValue(doc, xpath, serializeXML(el), 'application/xml; charset=utf-8');
+		//console.log(doc + ' ' + xpath + ' ' + serializeXML(el));
+		cmsx.updateValue(doc, xpath, '<article xmlns="http://www.w3.org/1999/xhtml">' + el.innerHTML.replace(brFixPattern, '<br/>') + '</article>', 'application/xml; charset=utf-8');
 	});
 });

@@ -56,10 +56,13 @@ declare function cmsx:render-page-content($site as node(), $page as node()) as n
 };
 
 declare function cmsx:render-page-html-content($page as node()) as node() {
-  let $doc := cmsx:page-content($page)
-  return <div class="cmsx-richedit" data-cmsx-doc="{$page/@src/string()}" data-cmsx-xpath="*">
-    {$doc}
-  </div>
+  cmsx:page-content($page) transform with {
+    insert node (
+      attribute { 'class' } { 'cmsx-richedit' },
+      attribute { 'data-cmsx-doc' } { $page/@src/string() },
+      attribute { 'data-cmsx-xpath' } { '*' }
+    ) into .
+  }
 };
 
 declare function cmsx:xslt-transform-cms-content($page as node()) as node() {
