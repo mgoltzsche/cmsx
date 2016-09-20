@@ -15,7 +15,7 @@ CmsxService.prototype.setPageProperty = function(name, value, pageUrl) {
 	});
 };
 
-CmsxService.prototype.updateValue = function(doc, xpath, value, contentType) {
+CmsxService.prototype.updateDocument = function(doc, xpath, value, contentType) {
 	var url = this._rootURI + '/doc/' + doc + "?xpath=" + encodeURIComponent(xpath || '*');
 
 	// TODO: error handling

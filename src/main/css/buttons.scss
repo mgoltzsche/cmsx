@@ -2,8 +2,8 @@
 	display: inline-block;
 	cursor: pointer;
 	@include border-radius($borderRadius);
-	margin: $spacing/2;
-	padding: 0 $spacing/2;
+	margin: $margin/2;
+	padding: 0 $margin/2;
 	line-height: 1em;
 	font-size: 1em;
 }

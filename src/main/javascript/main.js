@@ -1,13 +1,13 @@
 var $ = require('jquery');
-var CmsxService = require('./cmsx-service.js');
 var MediumEditor = require('medium-editor');
+var saveExt = require('./cmsx-editor-save-extension.js');
+var CmsxService = require('./cmsx-service.js');
 
 var cmsx = new CmsxService('');
 
 function createPageTitleEditor() {
 	var ctx = {pageTitle: ''};
-	var editor = new MediumEditor('#cmsx-page-title', {
-		toolbar : false,
+	/*var editor = new MediumEditor('.cmsx-page-title', {
 		keyboardCommands : false,
 		anchorPreview : false,
 		disableReturn : true,
@@ -17,9 +17,22 @@ function createPageTitleEditor() {
 		placeholder : {
 			text : 'Page title',
 			hideOnClick : true
+		},
+		toolbar: {
+			static: true,
+			sticky: false,
+			updateOnEmptySelection: true,
+			buttons: ['save', 'cancel']
+		},
+		extensions: {
+			'save': new saveExt.MediumSaveButton(function(value) {
+				console.log('update title: ' + value);
+				//cmsx.updateDocument(doc, xpath, xml, 'application/xml; charset=utf-8');
+			}),
+			'cancel': new saveExt.MediumCancelButton()
 		}
-	});
-	editor.subscribe('editableKeyup', function(evt) {
+	});*/
+/*	editor.subscribe('editableKeyup', function(evt) {
 		evt = evt || window.event;
 		var newTitle = (evt.target || evt.srcElement).textContent;
 
@@ -27,42 +40,10 @@ function createPageTitleEditor() {
 			ctx.pageTitle = newTitle;
 			cmsx.setPageProperty('title', newTitle);
 		}
-	});
+	});*/
 }
 
-function serializeXML(xmlNode) {
-   try {
-      // Gecko- and Webkit-based browsers (Firefox, Chrome), Opera.
-      return (new XMLSerializer()).serializeToString(xmlNode);
-  }
-  catch (e) {
-     try {
-        // Internet Explorer.
-        return xmlNode.xml;
-     }
-     catch (e) {
-        // Other browsers without XML Serializer
-        alert('XMLSerializer not supported. Please use a different browser');
-     }
-   }
-   return false;
-}
-
-function obj(o, d) {
-	var str = '';
-	if (typeof o === 'object') {
-	var ind = "";
-	for (var i = 0; i < d; i++) {
-		int += "  ";
-	}
-	for (var k in o) {
-		str += "\n" + ind + k + ': ' + obj(o[k], d + 1);
-	}
-	} else {
-		str = "" + o;
-	}
-	return str;
-}
+var brFixPattern = /<br\s*>/g;
 
 /*
  * function edited(doc, path, evt, editable) { evt = evt || window.event;
@@ -71,33 +52,38 @@ function obj(o, d) {
 $(document).ready(function() {
 	createPageTitleEditor();
 
-	var brFixPattern = /<br\s*>/g;
 	/*
 	 * $('.cmsx-richedit').forEach(function() { var doc =
 	 * this.data('cmsx-document'), path = this.data('cmsx-path'); });
 	 */
-	var editor = new MediumEditor('.cmsx-richedit', {
+	var editor = new MediumEditor('.cmsx-edit, .cmsx-richedit', {
 		anchorPreview : true,
 		disableReturn : false,
 		disableDoubleReturn : false,
-		disableExtraSpaces : true, /* Creates html entities and is bad style */
+		disableExtraSpaces : false, // Creates html entities and is bad style
 		spellcheck : false,
-		toolbar: {
-			static: true,
-			sticky: true,
-			updateOnEmptySelection: true
-		},
 		placeholder : {
 			text : 'Content',
 			hideOnClick : true
+		},
+		toolbar: {
+			static: true,
+			sticky: true,
+			updateOnEmptySelection: true,
+			buttons: ['save', 'cancel', 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'quote', 'removeFormat']
+		},
+		extensions: {
+			'save': new saveExt.MediumSaveButton(function(contents) {
+				for (var i = 0; i < contents.length; i++) {
+					var c = contents[i];
+					var xml = c.content.replace(brFixPattern, '<br/>');
+					xml = '<article xmlns="http://www.w3.org/1999/xhtml">' + xml + '</article>';
+					console.log(c.doc + ':    ' + c.content);
+					// TODO: handle text edits like page title
+					cmsx.updateDocument(c.doc, c.xpath, xml, 'application/xml; charset=utf-8');
+				}
+			}),
+			'cancel': new saveExt.MediumCancelButton()
 		}
-	});
-	editor.subscribe('editableInput', function(evt, editable) {
-		evt = evt || window.event;
-		var el = evt.target || evt.srcElement;
-		var doc = el.getAttribute('data-cmsx-doc');
-		var xpath = el.getAttribute('data-cmsx-xpath');
-		//console.log(doc + ' ' + xpath + ' ' + serializeXML(el));
-		cmsx.updateValue(doc, xpath, '<article xmlns="http://www.w3.org/1999/xhtml">' + el.innerHTML.replace(brFixPattern, '<br/>') + '</article>', 'application/xml; charset=utf-8');
 	});
 });

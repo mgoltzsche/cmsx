@@ -86,12 +86,16 @@ declare function cmsx:default-theme($site as node(), $page as node(), $urlPrefix
     <head>
       <title>{$title}</title>
       <link rel="stylesheet" href="//cdn.jsdelivr.net/medium-editor/5.22.0/css/medium-editor.min.css" type="text/css" media="screen" charset="utf-8" />
-      <link rel="stylesheet" href="{$urlPrefix}../resources/css/default-theme.min.css" />
+      <link rel="stylesheet" href="{$urlPrefix}../resources/css/cmsx-0.0.1.min.css" />
       <script type="text/javascript" src="{$urlPrefix}../resources/js/cmsx-0.0.1.min.js"></script>
     </head>
     <body>
+      <div class="main">
       <a href="{$urlPrefix}index.html">{$site/@title/string()}</a>
-      <h1 id="cmsx-page-title">{$title}</h1>
+      <h1 class="cmsx-edit"
+        data-placeholder="Title" data-disable-return="true"
+        data-cmsx-doc="cms-site.xml"
+        data-cmsx-xpath="{cmsx:generate-xpath($page)}/@title">{$title}</h1>
       <nav>
         {cmsx:html-navigation($site, $page, $urlPrefix)}
       </nav>
@@ -102,6 +106,7 @@ declare function cmsx:default-theme($site as node(), $page as node(), $urlPrefix
       <div>
         {cmsx:render-page-content($site, $page)}
       </div>
+	  </div>
     </body>
   </html>
 };
@@ -147,6 +152,31 @@ declare function cmsx:html-subnavigation($page as node(), $urlPrefix as xs:strin
 declare function cmsx:generate-start-page($page as node()) as node() {
   <p>some generated content</p>
 };
+
+declare function cmsx:generate-xpath($node as node()) as xs:string {
+  string-join(for $ancestor in $node/ancestor-or-self::*
+    return '*['||count($ancestor/preceding-sibling::*)+1||']', '/')
+  || (
+    if (count($node|$node/../@*) = count($node/../@*)) (: if is attribute :)
+      then '/@'||$node/name()
+      else ''
+  )
+};
+
+(:
+	<xsl:function name="c:path">
+		<xsl:param name="node" as="node()" />
+		<xsl:for-each select="$node/ancestor-or-self::*">
+			<xsl:text disable-output-escaping="yes">/*</xsl:text>
+			<xsl:text disable-output-escaping="yes">[</xsl:text>
+			<xsl:value-of select="count(preceding-sibling::*) + 1" />
+			<xsl:text disable-output-escaping="yes">]</xsl:text>
+		</xsl:for-each>
+		<xsl:if test="count($node|$node/../@*)=count($node/../@*)">
+			<xsl:value-of select="concat('/@', $node/name())" />
+		</xsl:if>
+	</xsl:function>
+:)
 
 declare function cmsx:http-header($statusCode as xs:integer, $contentType as xs:string, $contentLanguage as xs:string) {
   <rest:response>

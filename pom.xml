@@ -38,7 +38,7 @@
 			</resource>
 			<resource>
 				<directory>src/main/css</directory>
-				<targetPath>css</targetPath>
+				<targetPath>${basedir}/frontend-work/css</targetPath>
 			</resource>
 		</resources>
 		<plugins>

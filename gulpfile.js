@@ -17,13 +17,13 @@ var consolidate = require('gulp-consolidate');
 var runTimestamp = Math.round(Date.now()/1000);
 var fontName = 'cmsx-icons';
 
-gulp.task('default', ['browserify'/*, 'sass', 'iconfont'*/], function() {
+gulp.task('default', ['browserify', 'sass'/*, 'iconfont'*/], function() {
 	return gulp.src(['./package.json', '${basedir}/src/main/icons/favicon.png', '${basedir}/src/main/icons/favicon.ico'])
 		.pipe(gulp.dest('${basedir}/target/classes'));
 });
 
 gulp.task('sass', ['clean', 'iconfont'], function() {
-	return gulp.src(['css/webdav-client.scss'])
+	return gulp.src(['css/cmsx.scss'])
 		.pipe(sourcemaps.init())
 		.pipe(sass({outputStyle: 'compressed'}))
 		.pipe(sourcemaps.write())
@@ -55,7 +55,7 @@ gulp.task('iconfont', function(){
 				glyphs: glyphs,
 				fontName: fontName + '-' + pkg.version,
 				fontPath: '../fonts/',
-				className: 'dav'
+				className: 'cmsx'
 			}))
 			.pipe(gulp.dest('css'));
 		})

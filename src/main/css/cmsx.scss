@@ -10,7 +10,8 @@ $colorModPercent: 20%;
 
 @import "mixins.scss";
 @import "buttons.scss";
-@import "icons.scss";
+@import "_icons.generated.scss";
+@import "cmsx-editor.scss";
 
 html {
     height: 100%;
