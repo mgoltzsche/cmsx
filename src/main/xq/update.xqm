@@ -3,6 +3,7 @@ declare namespace s = "http://cms.algorythm.de/common/Site";
 declare namespace h = "http://www.w3.org/1999/xhtml";
 
 import module namespace db = "http://basex.org/modules/db";
+import module namespace html = "http://basex.org/modules/html";
 
 (:
  : Set option UPDINDEX=true to enable incremental indexing (Not working for full-text indices)

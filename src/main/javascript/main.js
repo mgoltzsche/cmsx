@@ -81,8 +81,9 @@ $(document).ready(function() {
 
 					if (c.editable.classList.contains('cmsx-richedit')) {
 						// richedit - send XML
-						contentType = 'application/xml';
-						content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content.replace(brFixPattern, '<br/>') + '</article>';
+						contentType = 'text/html';
+						content = content.replace(brFixPattern, '<br/>');
+						content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content + '</article>';
 					} else {
 						// simple edit - send text
 						contentType = 'text/plain';
