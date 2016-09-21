@@ -27,11 +27,7 @@ function MediumSaveButton(handler) {
 
 			for (var k in changes) {
 				if (changes.hasOwnProperty(k)) {
-					contents.push({
-						doc: changes[k].doc,
-						xpath: changes[k].xpath,
-						content: changes[k].editable.innerHTML
-					});
+					contents.push(changes[k]);
 				}
 			}
 			if (contents.length > 0) {

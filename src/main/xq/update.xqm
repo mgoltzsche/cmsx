@@ -24,7 +24,7 @@ updating function upd:update-document($contentPath as xs:string, $xpath as xs:st
     let $doc := doc($docPath)
     let $alterNode := upd:dynamic-path($doc, $xpath)
     return if ($alterNode)
-      then if ($value/self::text())
+      then if ($value instance of xs:string)
         (: TODO: insert new attribute if not found :)
         then replace value of node $alterNode with $value
         else replace node $alterNode with $value/*

@@ -76,11 +76,19 @@ $(document).ready(function() {
 			'save': new saveExt.MediumSaveButton(function(contents) {
 				for (var i = 0; i < contents.length; i++) {
 					var c = contents[i];
-					var xml = c.content.replace(brFixPattern, '<br/>');
-					xml = '<article xmlns="http://www.w3.org/1999/xhtml">' + xml + '</article>';
-					console.log(c.doc + ':    ' + c.content);
-					// TODO: handle text edits like page title
-					cmsx.updateDocument(c.doc, c.xpath, xml, 'application/xml; charset=utf-8');
+					var content = c.editable.innerHTML;
+					var contentType;
+
+					if (c.editable.classList.contains('cmsx-richedit')) {
+						// richedit - send XML
+						contentType = 'application/xml';
+						content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content.replace(brFixPattern, '<br/>') + '</article>';
+					} else {
+						// simple edit - send text
+						contentType = 'text/plain';
+					}
+
+					cmsx.updateDocument(c.doc, c.xpath, content, contentType + '; charset=utf-8');
 				}
 			}),
 			'cancel': new saveExt.MediumCancelButton()
