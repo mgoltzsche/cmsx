@@ -1,6 +1,16 @@
+/**
+ * Browser limitations:
+ *   contenteditable:  not in Opera Mini, IE>=8,  FF49, Safari/iOS Safari 10
+ *   classList:        not in Opera Mini, IE>=11, FF49, Safari/iOS Safari 10
+ *     (IE11: doesn't support multiple args on toggle(), add(), remove(); doesn't work with svg)
+ *   addEventListener: IE>=11, FF49, Safari/iOS Safari 10
+ *   input event:      not in Opera Mini, IE>=11, FF49, Safari/iOS Safari 10
+ */
+
 var $ = require('jquery');
 var MediumEditor = require('medium-editor');
 var saveExt = require('./cmsx-editor-save-extension.js');
+var SimpleEdit = require('./cmsx-simple-edit.js');
 var CmsxService = require('./cmsx-service.js');
 
 var cmsx = new CmsxService('');
@@ -43,8 +53,6 @@ function createPageTitleEditor() {
 	});*/
 }
 
-var brFixPattern = /<br\s*>/g;
-
 /*
  * function edited(doc, path, evt, editable) { evt = evt || window.event;
  * console.log((evt.target || evt.srcElement).innerHTML); };
@@ -56,7 +64,14 @@ $(document).ready(function() {
 	 * $('.cmsx-richedit').forEach(function() { var doc =
 	 * this.data('cmsx-document'), path = this.data('cmsx-path'); });
 	 */
-	var editor = new MediumEditor('.cmsx-edit, .cmsx-richedit', {
+	new SimpleEdit('.cmsx-edit', function(evt, editable) {
+		var doc = editable.getAttribute('data-cmsx-doc'),
+			xpath = editable.getAttribute('data-cmsx-xpath'),
+			content = editable.textContent;
+		console.log('edited: ' + doc + '/' + xpath + ' ' + content);
+		//cmsx.updateDocument(doc, xpath, content, 'text/plain; charset=utf-8');
+	});
+	new MediumEditor('.cmsx-richedit', {
 		anchorPreview : true,
 		disableReturn : false,
 		disableDoubleReturn : false,
@@ -67,13 +82,14 @@ $(document).ready(function() {
 			hideOnClick : true
 		},
 		toolbar: {
-			static: true,
-			sticky: true,
+			static: false,
 			updateOnEmptySelection: true,
 			buttons: ['save', 'cancel', 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'quote', 'removeFormat']
 		},
 		extensions: {
 			'save': new saveExt.MediumSaveButton(function(contents) {
+				var brFixPattern = /<br\s*>/g;
+
 				for (var i = 0; i < contents.length; i++) {
 					var c = contents[i];
 					var content = c.editable.innerHTML;
