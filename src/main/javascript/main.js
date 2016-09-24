@@ -53,6 +53,54 @@ function createPageTitleEditor() {
 	});*/
 }
 
+function ContentSyncManager(onChanged) {
+	this._handler = onChanged;
+	this._changes = {};
+	this._pristine = true;
+	this._delayedChangeHandler = (function(self) {
+		return function() {
+			self.flushIfUserInactive();
+		};
+	})(this);
+}
+
+var sm = ContentSyncManager.prototype;
+sm.delay = 1500;
+
+sm.flushIfUserInactive = function() {
+	if (new Date().getTime() - this._lastChangeTime > this.delay) {
+		this.flush();
+	} else {
+		setTimeout(this._delayedChangeHandler, this.delay);
+	}
+};
+
+sm.flush = function() {
+	if (!this._pristine) {
+		var changes = [];
+
+		for (var k in this._changes) {
+			if (this._changes.hasOwnProperty(k)) {
+				changes.push(this._changes[k]);
+			}
+		}
+
+		this._handler(changes);
+		this._changes = {};
+		this._pristine = true;
+	}
+};
+
+sm.sync = function(change) {
+	this._changes[change.doc + ':' + change.xpath] = change;
+	this._lastChangeTime = new Date().getTime();
+
+	if (this._pristine) {
+		setTimeout(this._delayedChangeHandler, this.delay);
+		this._pristine = false;
+	}
+};
+
 /*
  * function edited(doc, path, evt, editable) { evt = evt || window.event;
  * console.log((evt.target || evt.srcElement).innerHTML); };
@@ -64,18 +112,48 @@ $(document).ready(function() {
 	 * $('.cmsx-richedit').forEach(function() { var doc =
 	 * this.data('cmsx-document'), path = this.data('cmsx-path'); });
 	 */
-	new SimpleEdit('.cmsx-edit', function(evt, editable) {
+
+	/*new SimpleEdit('.cmsx-edit', function(evt, editable) {
 		var doc = editable.getAttribute('data-cmsx-doc'),
 			xpath = editable.getAttribute('data-cmsx-xpath'),
 			content = editable.textContent;
 		console.log('edited: ' + doc + '/' + xpath + ' ' + content);
 		//cmsx.updateDocument(doc, xpath, content, 'text/plain; charset=utf-8');
+	});*/
+
+	var syncManager = new ContentSyncManager(function(changes) {
+		for (var i = 0; i < changes.length; i++) {
+			var c = changes[i];
+			cmsx.updateDocument(c.doc, c.xpath, c.content, c.contentType + '; charset=utf-8');
+		}
 	});
+
+	new MediumEditor('.cmsx-edit', {
+		disableReturn : true,
+		disableDoubleReturn : true,
+		keyboardCommands: false,
+		toolbar: false,
+		anchorPreview : false,
+		spellcheck : false,
+		placeholder : {
+			text : 'Content',
+			hideOnClick : true
+		},
+		extensions: {
+			'save': new saveExt.MediumChangeListener(function(change) {
+				change.content = change.editable.textContent;
+				change.contentType = 'text/plain';
+				delete change.editable;
+				syncManager.sync(change);
+			})
+		}
+	});
+
 	new MediumEditor('.cmsx-richedit', {
 		anchorPreview : true,
 		disableReturn : false,
 		disableDoubleReturn : false,
-		disableExtraSpaces : false, // Creates html entities and is bad style
+		disableExtraSpaces : false,
 		spellcheck : false,
 		placeholder : {
 			text : 'Content',
@@ -87,28 +165,15 @@ $(document).ready(function() {
 			buttons: ['save', 'cancel', 'bold', 'italic', 'underline', 'anchor', 'h2', 'h3', 'quote', 'removeFormat']
 		},
 		extensions: {
-			'save': new saveExt.MediumSaveButton(function(contents) {
+			'save': new saveExt.MediumChangeListener(function(change) {
 				var brFixPattern = /<br\s*>/g;
-
-				for (var i = 0; i < contents.length; i++) {
-					var c = contents[i];
-					var content = c.editable.innerHTML;
-					var contentType;
-
-					if (c.editable.classList.contains('cmsx-richedit')) {
-						// richedit - send XML
-						contentType = 'text/html';
-						content = content.replace(brFixPattern, '<br/>');
-						content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content + '</article>';
-					} else {
-						// simple edit - send text
-						contentType = 'text/plain';
-					}
-
-					cmsx.updateDocument(c.doc, c.xpath, content, contentType + '; charset=utf-8');
-				}
-			}),
-			'cancel': new saveExt.MediumCancelButton()
+				var content = change.editable.innerHTML;
+				content = content.replace(brFixPattern, '<br/>');
+				change.content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content + '</article>';
+				change.contentType = 'text/html';
+				delete change.editable;
+				syncManager.sync(change);
+			})
 		}
 	});
 });

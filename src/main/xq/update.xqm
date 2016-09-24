@@ -39,7 +39,7 @@ updating function upd:update-document($contentPath as xs:string, $xpath as xs:st
 (:~
  : Resolves the given xpath against the node provided.
  : E.g.: *, child/el, el/@attr, el[1]
- : (Enhanced functx' dynamic-path version taking element indexes into account)
+ : Enhanced functx' dynamic-path version taking element indexes into account.
  :
  : @author  Max Goltzsche <max.goltzsche@algorythm.de>
  : @version 1.0

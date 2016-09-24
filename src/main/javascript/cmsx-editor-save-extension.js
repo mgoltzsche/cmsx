@@ -18,6 +18,50 @@ function obj(o, d) {
 	return str;
 }
 
+
+
+function MediumChangeListener(listener) {
+	this.onContentChange = (function(self) {
+		return function(evt, editable) {
+			var xpath = editable.getAttribute('data-cmsx-xpath');
+
+			if (!xpath) {
+				throw 'No data-cmsx-xpath attribute declared on editor element';
+			}
+
+			listener({
+				doc: self.getSourceDocument(editable),
+				xpath: xpath,
+				editable: editable
+			});
+		};
+	})(this);
+}
+
+var ch = MediumChangeListener.prototype;
+
+ch.init = function() {
+	this.base.subscribe('editableInput', this.onContentChange);
+};
+
+ch.destroy = function() {
+	this.button.onclick = null;
+	this.base.unsubscribe('editableInput', this.onContentChange);
+};
+
+ch.getSourceDocument = function(element) {
+	var doc = element.getAttribute('data-cmsx-doc');
+
+	if (doc) {
+		return doc;
+	} else if (element.parentNode) {
+		return this.getSourceDocument(element.parentNode);
+	} else {
+		throw 'No data-cmsx-doc attribute declared on editor element or parent';
+	}
+};
+
+
 function MediumSaveButton(handler) {
 	this.name = 'save';
 	this.button = this._createButton('save', (function(self) {
@@ -66,9 +110,14 @@ SaveBtn._createButton = CancelBtn._createButton = function(label, handler) {
 	return button;
 };
 
+SaveBtn.getSourceDocument = function(element) {
+	var doc = element.getAttribute('data-cmsx-doc');
+	return doc ? doc : element.parentNode ? this.getSourceDocument(element.parentNode) : null;
+};
+
 SaveBtn.onContentChange = function(evt, editable) {
-	var doc = editable.getAttribute('data-cmsx-doc');
 	var xpath = editable.getAttribute('data-cmsx-xpath');
+	var doc = this.getSourceDocument(editable);
 	this._changes[doc + ':' + xpath] = {
 		doc: doc,
 		xpath: xpath,
@@ -130,7 +179,8 @@ SaveBtn.toXML = CancelBtn.toXML = function() {
 
 module.exports = {
 	MediumSaveButton: MediumSaveButton,
-	MediumCancelButton: MediumCancelButton
+	MediumCancelButton: MediumCancelButton,
+	MediumChangeListener: MediumChangeListener
 };
 
 
