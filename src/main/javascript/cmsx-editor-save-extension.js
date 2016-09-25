@@ -21,21 +21,19 @@ function obj(o, d) {
 
 
 function MediumChangeListener(listener) {
-	this.onContentChange = (function(self) {
-		return function(evt, editable) {
-			var xpath = editable.getAttribute('data-cmsx-xpath');
+	this.onContentChange = function(evt, editable) {
+		var xpath = editable.getAttribute('data-cmsx-xpath');
 
-			if (!xpath) {
-				throw 'No data-cmsx-xpath attribute declared on editor element';
-			}
+		if (!xpath) {
+			throw 'No data-cmsx-xpath attribute declared on editor element';
+		}
 
-			listener({
-				doc: self.getSourceDocument(editable),
-				xpath: xpath,
-				editable: editable
-			});
-		};
-	})(this);
+		listener({
+			doc: this.getSourceDocument(editable),
+			xpath: xpath,
+			editable: editable
+		});
+	}.bind(this);
 }
 
 var ch = MediumChangeListener.prototype;
@@ -64,39 +62,29 @@ ch.getSourceDocument = function(element) {
 
 function MediumSaveButton(handler) {
 	this.name = 'save';
-	this.button = this._createButton('save', (function(self) {
-		return function() {
-			var changes = self._changes;
-			var contents = [], i = 0;
+	this.button = this._createButton('save', function() {
+		var changes = this._changes;
+		var contents = [], i = 0;
 
-			for (var k in changes) {
-				if (changes.hasOwnProperty(k)) {
-					contents.push(changes[k]);
-				}
+		for (var k in changes) {
+			if (changes.hasOwnProperty(k)) {
+				contents.push(changes[k]);
 			}
-			if (contents.length > 0) {
-				handler(contents);
-				self._changes = {};
-			}
-		};
-	})(this));
-	this._onContentChange = (function(self) {
-		return function(evt, editable) {
-			self.onContentChange(evt, editable);
-		};
-	})(this);
+		}
+		if (contents.length > 0) {
+			handler(contents);
+			this._changes = {};
+		}
+	}.bind(this));
+	this._onContentChange = this.onContentChange.bind(this);
 	this._changes = {};
 }
 
 function MediumCancelButton() {
 	this.name = 'cancel';
-	this.button = this._createButton('cancel', (function(self) {
-		return function() {
-			// TODO: 
-			//self.base.lastContent
-			// TODO: reset last state
-		};
-	})(this));
+	this.button = this._createButton('cancel', function() {
+		
+	}.bind(this));
 }
 
 var SaveBtn = MediumSaveButton.prototype;

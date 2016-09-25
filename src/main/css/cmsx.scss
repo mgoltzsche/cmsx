@@ -8,10 +8,13 @@ $borderRadius: 3px;
 $margin: 10px;
 $colorModPercent: 20%;
 
+@import "medium-editor.scss";
 @import "mixins.scss";
 @import "buttons.scss";
 @import "_icons.generated.scss";
-@import "cmsx-editor.scss";
+@import "cmsx-toolbar.scss";
+@import "webdav-browser.scss";
+@import "media-display.scss";
 
 html {
     height: 100%;

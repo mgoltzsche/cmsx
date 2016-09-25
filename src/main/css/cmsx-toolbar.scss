@@ -1,0 +1,64 @@
+.cmsx-toolbar {
+	position: fixed;
+	right: 0;
+	top: 10%;
+	float: right;
+	background: $backgroundColor;
+	border: 1px solid #textColor;
+	border-right: none;
+	@include border-radius($borderRadius 0 0 $borderRadius);
+	@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
+
+	.cmsx-toolbar-buttons, .cmsx-toolbar-contents {
+		float: right;
+	}
+
+	.cmsx-toolbar-button {
+		display: block;
+		padding: $margin/2;
+		border-bottom: 1px solid $borderColor;
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}			
+
+	&.cmsx-toolbar-show-content {
+		top: 0;
+		width: 80%;
+		height: 100%;
+		border-top: none;
+		border-bottom: none;
+		@include border-radius(0px);		
+
+		.cmsx-toolbar-buttons {
+			position: relative;
+			top: 10%;
+		}
+
+		.cmsx-toolbar-button {
+			&, &:last-child {
+				border-left: 1px solid $borderColor;
+				border-bottom: 1px solid $borderColor;
+			}
+
+			&:first-child {
+				border-top: 1px solid $borderColor;
+			}
+
+			&.cmsx-toolbar-button-active {
+				border-left: none;
+			}
+		}
+	}
+
+	.cmsx-toolbar-contents {
+		.cmsx-toolbar-content {
+			display: none;
+
+			&.cmsx-toolbar-content-active {
+				display: block;
+			}
+		}
+	}
+}

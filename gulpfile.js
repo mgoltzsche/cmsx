@@ -32,8 +32,8 @@ gulp.task('sass', ['clean', 'iconfont'], function() {
 });
 
 gulp.task('browserify', ['clean', 'lint'], function() {
-	return browserify('js/main.js')
-		.transform(babelify, {presets: [/*'es2015', 'react'*/]}) // compile with ECMA Script 6 and react
+	return browserify('js/main.jsx')
+		.transform(babelify, {presets: [/*'es2015',*/ 'react']}) // compile with ECMA Script 6 and react
 		.bundle()
 		.pipe(source(pkg.name + '-' + pkg.version + '.min.js')) // converts to vinyl src with name
 		.pipe(buffer())                     // converts to vinyl buffer obj

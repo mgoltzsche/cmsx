@@ -4,7 +4,10 @@
 	"main": "js/cmsx.js",
 	"dependencies": {
 		"jquery": "~3.1.0",
-		"medium-editor": "~5.22.0"
+		"medium-editor": "~5.22.0",
+		"react": "~15.3.2",
+		"react-dom": "~15.3.2",
+		"webworkify": "~1.4.0"
 	},
 	"devDependencies": {
 		"gulp": "~3.9.1",
@@ -19,6 +22,7 @@
 		"lodash": "~4.15.0",
 		"browserify": "~12.0.1",
 		"babelify": "~7.3.0",
+		"babel-preset-react": "~6.11.1",
 		"babel-eslint": "~6.1.2",
 		"vinyl-source-stream": "~1.1.0",
 		"vinyl-buffer": "~1.0.0",

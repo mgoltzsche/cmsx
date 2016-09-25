@@ -85,7 +85,6 @@ declare function cmsx:default-theme($site as node(), $page as node(), $urlPrefix
   return <html>
     <head>
       <title>{$title}</title>
-      <link rel="stylesheet" href="//cdn.jsdelivr.net/medium-editor/5.22.0/css/medium-editor.min.css" type="text/css" media="screen" charset="utf-8" />
       <link rel="stylesheet" href="{$urlPrefix}../resources/css/cmsx-0.0.1.min.css" />
       <script type="text/javascript" src="{$urlPrefix}../resources/js/cmsx-0.0.1.min.js"></script>
     </head>

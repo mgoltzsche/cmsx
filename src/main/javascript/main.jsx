@@ -10,14 +10,20 @@
 var $ = require('jquery');
 var MediumEditor = require('medium-editor');
 var saveExt = require('./cmsx-editor-save-extension.js');
-var SimpleEdit = require('./cmsx-simple-edit.js');
+//var SimpleEdit = require('./cmsx-simple-edit.js');
 var CmsxService = require('./cmsx-service.js');
+var toolbar = require('./cmsx-toolbar.js');
+var WebDavClient = require('./webdav-client.js');
+var WebDavUI = require('./webdav-ui.jsx');
+var React = require('react');
+var ReactDOM = require('react-dom');
 
+var webDavClient = new WebDavClient('admin', 'admin');
 var cmsx = new CmsxService('');
 
 function createPageTitleEditor() {
 	var ctx = {pageTitle: ''};
-	/*var editor = new MediumEditor('.cmsx-page-title', {
+	var editor = new MediumEditor('.cmsx-page-title', {
 		keyboardCommands : false,
 		anchorPreview : false,
 		disableReturn : true,
@@ -41,7 +47,7 @@ function createPageTitleEditor() {
 			}),
 			'cancel': new saveExt.MediumCancelButton()
 		}
-	});*/
+	});
 /*	editor.subscribe('editableKeyup', function(evt) {
 		evt = evt || window.event;
 		var newTitle = (evt.target || evt.srcElement).textContent;
@@ -57,11 +63,7 @@ function ContentSyncManager(onChanged) {
 	this._handler = onChanged;
 	this._changes = {};
 	this._pristine = true;
-	this._delayedChangeHandler = (function(self) {
-		return function() {
-			self.flushIfUserInactive();
-		};
-	})(this);
+	this._delayedChangeHandler = this.flushIfUserInactive.bind(this);
 }
 
 var sm = ContentSyncManager.prototype;
@@ -106,7 +108,24 @@ sm.sync = function(change) {
  * console.log((evt.target || evt.srcElement).innerHTML); };
  */
 $(document).ready(function() {
-	createPageTitleEditor();
+	var content = document.createElement('div');
+	content.innerHTML = 'a sd fa testcontent1 asdg asg asd ';
+	var btn1 = new toolbar.CmsxToolbarContent('btn1', content);
+	content = document.createElement('div');
+
+	var btn2 = new toolbar.CmsxToolbarContent('btn2', content, function() {
+		if (content.childNodes.length == 0) {
+			var el = document.createElement('div');
+			content.appendChild(el);
+
+			var webDavBrowser = ReactDOM.render(<WebDavUI rootURL="/webdav"
+				client={webDavClient}
+				getPreviewHref={function(href) {return '';}} />, el);
+			webDavBrowser.select('');
+		}
+	});
+	new toolbar.CmsxToolbar([btn1, btn2]);
+	//createPageTitleEditor();
 
 	/*
 	 * $('.cmsx-richedit').forEach(function() { var doc =
@@ -151,9 +170,6 @@ $(document).ready(function() {
 
 	new MediumEditor('.cmsx-richedit', {
 		anchorPreview : true,
-		disableReturn : false,
-		disableDoubleReturn : false,
-		disableExtraSpaces : false,
 		spellcheck : false,
 		placeholder : {
 			text : 'Content',

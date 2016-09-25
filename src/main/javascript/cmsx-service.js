@@ -5,7 +5,9 @@ function CmsxService(rootURI) {
 	this._rootURI = rootURI;
 }
 
-CmsxService.prototype.setPageProperty = function(name, value, pageUrl) {
+var service = CmsxService.prototype;
+
+service.setPageProperty = function(name, value, pageUrl) {
 	var url = pageUrl || window.location.href;
 	var data = 'prop=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value);
 
@@ -15,7 +17,7 @@ CmsxService.prototype.setPageProperty = function(name, value, pageUrl) {
 	});
 };
 
-CmsxService.prototype.updateDocument = function(doc, xpath, value, contentType) {
+service.updateDocument = function(doc, xpath, value, contentType) {
 	var url = this._rootURI + '/doc/' + doc + "?xpath=" + encodeURIComponent(xpath || '*');
 
 	// TODO: error handling
