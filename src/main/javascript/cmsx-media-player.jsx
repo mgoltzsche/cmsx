@@ -1,8 +1,8 @@
-var log = require('./logger.js')('Player');
+var log = require('./logger.js')('CmsxMediaPlayer');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var Player = React.createClass({
+var MediaPlayer = React.createClass({
 	getDefaultProps: function() {
 		return {
 			className: '',
@@ -64,7 +64,7 @@ var Player = React.createClass({
 		}
 	},
 	getClassName: function() {
-		return 'player ' + this.props.className + (this.state.playing ? ' playing' : ' paused');
+		return 'cmsx-player ' + this.props.className + (this.state.playing ? ' playing' : ' paused');
 	},
 	render: function() {
 		return <div className={this.getClassName()} style={{width: this.props.width, height: this.props.height}} onClick={this.play} ref="container">
@@ -75,4 +75,4 @@ var Player = React.createClass({
 	}
 });
 
-module.exports = Player;
+module.exports = MediaPlayer;

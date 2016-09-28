@@ -18,6 +18,14 @@ function obj(o, d) {
 	return str;
 }
 
+function keys(o) {
+	var str = '';
+	for (var k in o) {
+			str += '  ' + k;
+	}
+	return str;
+}
+
 
 
 function MediumChangeListener(listener) {

@@ -14,7 +14,7 @@ var saveExt = require('./cmsx-editor-save-extension.js');
 var CmsxService = require('./cmsx-service.js');
 var toolbar = require('./cmsx-toolbar.js');
 var WebDavClient = require('./webdav-client.js');
-var WebDavUI = require('./webdav-ui.jsx');
+var WebDavBrowser = require('./cmsx-webdav-browser.jsx');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -115,13 +115,9 @@ $(document).ready(function() {
 
 	var btn2 = new toolbar.CmsxToolbarContent('btn2', content, function() {
 		if (content.childNodes.length == 0) {
-			var el = document.createElement('div');
-			content.appendChild(el);
-
-			var webDavBrowser = ReactDOM.render(<WebDavUI rootURL="/webdav"
-				client={webDavClient}
-				getPreviewHref={function(href) {return '';}} />, el);
-			webDavBrowser.select('');
+			var webDavBrowser = ReactDOM.render(<WebDavBrowser rootURL="/webdav"
+				client={webDavClient} />, content);
+			webDavBrowser.show('');
 		}
 	});
 	new toolbar.CmsxToolbar([btn1, btn2]);

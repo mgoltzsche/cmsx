@@ -1,16 +1,20 @@
 .cmsx-toolbar {
 	position: fixed;
 	right: 0;
-	top: 10%;
-	float: right;
+	top: 0;
+	width: 0;
+	height: 100%;
 	background: $backgroundColor;
-	border: 1px solid #textColor;
-	border-right: none;
-	@include border-radius($borderRadius 0 0 $borderRadius);
-	@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
+	@include transition(width 0.3s);
 
-	.cmsx-toolbar-buttons, .cmsx-toolbar-contents {
-		float: right;
+	.cmsx-toolbar-buttons {
+		position: absolute;
+		top: 10%;
+		right: 0;
+		border: 1px solid #textColor;
+		border-right: none;
+		@include border-radius($borderRadius 0 0 $borderRadius);
+		@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
 	}
 
 	.cmsx-toolbar-button {
@@ -21,19 +25,16 @@
 		&:last-child {
 			border-bottom: none;
 		}
-	}			
+	}
 
 	&.cmsx-toolbar-show-content {
 		top: 0;
 		width: 80%;
 		height: 100%;
-		border-top: none;
-		border-bottom: none;
-		@include border-radius(0px);		
+		@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
 
 		.cmsx-toolbar-buttons {
-			position: relative;
-			top: 10%;
+			@include box-shadow(none);
 		}
 
 		.cmsx-toolbar-button {
@@ -47,9 +48,13 @@
 			}
 
 			&.cmsx-toolbar-button-active {
-				border-left: none;
+				border-left: 1px solid $actionColor;
 			}
 		}
+	}
+
+	.cmsx-toolbar-contents {
+		margin: $margin 30px $margin $margin;
 	}
 
 	.cmsx-toolbar-contents {

@@ -13,8 +13,10 @@ $colorModPercent: 20%;
 @import "buttons.scss";
 @import "_icons.generated.scss";
 @import "cmsx-toolbar.scss";
-@import "webdav-browser.scss";
-@import "media-display.scss";
+@import "cmsx-list.scss";
+@import "cmsx-tree.scss";
+@import "cmsx-webdav-browser.scss";
+@import "cmsx-media.scss";
 
 html {
     height: 100%;

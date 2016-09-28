@@ -1,0 +1,25 @@
+.cmsx-tree {
+
+	ul.cmsx-tree-parents {
+		border-bottom: none;
+
+		li.cmsx-list-item {
+			display: inline-block;
+			border-bottom: none;
+			padding: $margin/2 $margin/2 $margin/2 0;
+
+			&:first-child {
+				padding-left: $margin;
+			}
+
+			&:before {
+				content: '\000bb';
+				padding-right: $margin/2;
+			}
+
+			&:first-child:before {
+				display:none
+			}
+		}
+	}
+}

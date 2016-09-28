@@ -1,8 +1,8 @@
-var log = require('./logger.js')('ImageLoader');
+var log = require('./logger.js')('CmsxImageView');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ImageLoader = React.createClass({
+var CmsxImageView = React.createClass({
 	getDefaultProps: function() {
 		return {
 			src: '',
@@ -80,14 +80,14 @@ var ImageLoader = React.createClass({
 		this.refs.container.className = this.getClassName();
 	},
 	getClassName: function() {
-		return 'image-loader ' + this.props.className + (this.state.loading ? ' loading' : '');
+		return 'cmsx-image ' + this.props.className + (this.state.loading ? ' loading' : '');
 	},
 	render: function() {
 		return <div className={this.getClassName()} ref="container">
-			<i className="progress-indicator"></i>
+			<i className="cmsx-progress-indicator"></i>
 			<img ref="image" />
 		</div>
 	}
 });
 
-module.exports = ImageLoader;
+module.exports = CmsxImageView;

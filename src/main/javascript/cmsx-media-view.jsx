@@ -1,10 +1,10 @@
-var log = require('./logger.js')('MediaDisplay');
+var log = require('./logger.js')('CmsxMediaView');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ImageLoader = require('./image-loader.jsx');
-var Player = require('./player.jsx');
+var ImageView= require('./cmsx-image-view.jsx');
+var MediaPlayer = require('./cmsx-media-player.jsx');
 
-var MediaDisplay = React.createClass({
+var MediaView = React.createClass({
 	getDefaultProps: function() {
 		return {
 			className: '',
@@ -47,10 +47,10 @@ var MediaDisplay = React.createClass({
 		}.bind(this);
 
 		if (this.props.media)
-			this.displayMedia(this.props.media);
+			this.show(this.props.media);
 	},
 	componentWillUpdate: function(nextProps, nextState) {
-		this.displayMedia(nextProps.media);
+		this.show(nextProps.media);
 	},
 	displays: {
 		image: {
@@ -115,7 +115,7 @@ var MediaDisplay = React.createClass({
 			onResize: function() {}
 		}
 	},
-	displayMedia: function(media) {
+	show: function(media) {
 		if (!media) {
 			this.hide();
 			return;
@@ -157,7 +157,7 @@ var MediaDisplay = React.createClass({
 		this.state.display.show(this, media);
 
 		// Show display element
-		this.refs.container.className = 'media-display-' + this.state.display.name + ' ' + this.props.className;
+		this.refs.container.className = 'cmsx-media cmsx-media-' + this.state.display.name + ' ' + this.props.className;
 	},
 	hide: function() {
 		if (this.state.display !== this.displays.hidden) {
@@ -169,16 +169,16 @@ var MediaDisplay = React.createClass({
 		this.state.display.onResize(this, maxWidth, maxHeight);
 	},*/
 	handleImageLoaded: function(href, width, height) {
-		this.props.preferredContentSize(width, height, true); // Cheaper than setState
+		this.props.preferredContentSize(width, height, true);
 	},
 	render: function() {
-		return <div ref="container" className="media-display">
-			<ImageLoader className="image-display" onLoad={this.handleImageLoaded} ref="image" />
-			<Player className="stream-display" width="100%" height="100%" ref="stream" />
-			<iframe className="iframe-display" width="100%" height="100%" ref="iframe" />
-			<a className="button primary download-display" title="Download" ref="download">Download</a>
+		return <div ref="container">
+			<ImageView onLoad={this.handleImageLoaded} ref="image" />
+			<MediaPlayer width="100%" height="100%" ref="stream" />
+			<iframe className="cmsx-media-iframe" width="100%" height="100%" ref="iframe" />
+			<a className="cmsx-button primary cmsx-download" title="Download" ref="download">Download</a>
 		</div>
 	}
 });
 
-module.exports = MediaDisplay;
+module.exports = MediaView;
