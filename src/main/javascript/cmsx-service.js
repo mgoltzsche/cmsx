@@ -7,6 +7,26 @@ function CmsxService(rootURI) {
 
 var service = CmsxService.prototype;
 
+service.loadPage = function(pageUrl, callback) {
+	$.get({
+		url: pageUrl,
+		dataType: 'json',
+		success: function(page) {
+			callback(page);
+		}
+	});
+};
+
+service.updatePage = function(pageUrl, pageAttrs, callback) {
+	$.get({
+		url: pageUrl,
+		dataType: 'text',
+		success: function() {
+			console.log('page saved');
+		}
+	});
+};
+
 service.setPageProperty = function(name, value, pageUrl) {
 	var url = pageUrl || window.location.href;
 	var data = 'prop=' + encodeURIComponent(name) + '&val=' + encodeURIComponent(value);

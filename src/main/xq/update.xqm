@@ -11,7 +11,7 @@ import module namespace html = "http://basex.org/modules/html";
  :)
 
 declare
-%rest:path('doc/{$contentPath=.+}')
+%rest:path('/doc/{$contentPath=.+}')
 %rest:query-param('xpath', '{$xpath}')
 %rest:POST("{$value}")
 %output:method('text')

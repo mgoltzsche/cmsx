@@ -36,8 +36,8 @@ gulp.task('browserify', ['clean', 'lint'], function() {
 		.transform(babelify, {presets: [/*'es2015',*/ 'react']}) // compile with ECMA Script 6 and react
 		.bundle()
 		.pipe(source(pkg.name + '-' + pkg.version + '.min.js')) // converts to vinyl src with name
-		.pipe(buffer())                     // converts to vinyl buffer obj
-		.pipe(uglify())
+		/*.pipe(buffer())                     // converts to vinyl buffer obj
+		.pipe(uglify())*/
 		.pipe(gulp.dest('${basedir}/target/classes/resources/js'));
 });
 

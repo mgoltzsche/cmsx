@@ -1,6 +1,7 @@
 module namespace cmsx = "http://cmsx.algorythm.de/cmsx/renderer";
 declare default element namespace "http://www.w3.org/1999/xhtml";
 declare namespace s = "http://cms.algorythm.de/common/Site";
+declare namespace rest = "http://exquery.org/ns/restxq";
 
 (: ATTRINDEX option must be set to true (default) to efficiently resolve pages by ID :)
 

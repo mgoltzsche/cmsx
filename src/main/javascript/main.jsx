@@ -15,6 +15,7 @@ var CmsxService = require('./cmsx-service.js');
 var toolbar = require('./cmsx-toolbar.js');
 var WebDavClient = require('./webdav-client.js');
 var WebDavBrowser = require('./cmsx-webdav-browser.jsx');
+var PageBrowser = require('./cmsx-page-browser.jsx');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -108,19 +109,22 @@ sm.sync = function(change) {
  * console.log((evt.target || evt.srcElement).innerHTML); };
  */
 $(document).ready(function() {
-	var content = document.createElement('div');
-	content.innerHTML = 'a sd fa testcontent1 asdg asg asd ';
-	var btn1 = new toolbar.CmsxToolbarContent('btn1', content);
-	content = document.createElement('div');
+	var content1 = document.createElement('div');
+	var pageBrowserButton = new toolbar.CmsxToolbarContent('pages', content1, function(content) {
+		if (this.childNodes.length == 0) {
+			ReactDOM.render(<PageBrowser />, this);
+		}
+	}.bind(content1));
 
-	var btn2 = new toolbar.CmsxToolbarContent('btn2', content, function() {
-		if (content.childNodes.length == 0) {
+	var content2 = document.createElement('div');
+	var resourceBrowserButton = new toolbar.CmsxToolbarContent('resources', content2, function(content) {
+		if (this.childNodes.length == 0) {
 			var webDavBrowser = ReactDOM.render(<WebDavBrowser rootURL="/webdav"
-				client={webDavClient} />, content);
+				client={webDavClient} />, this);
 			webDavBrowser.show('');
 		}
-	});
-	new toolbar.CmsxToolbar([btn1, btn2]);
+	}.bind(content2));
+	new toolbar.CmsxToolbar([pageBrowserButton, resourceBrowserButton]);
 	//createPageTitleEditor();
 
 	/*

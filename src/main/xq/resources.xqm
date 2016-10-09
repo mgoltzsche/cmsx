@@ -3,7 +3,7 @@ declare default element namespace "http://cms.algorythm.de/common/CMS";
 
 declare
 %rest:GET
-%rest:path("resources/{$path=.+}")
+%rest:path("/resources/{$path=.+}")
 function resources:get($path as xs:string) {
 	let $absPath := '/home/max/development/java/basex/basex-api/src/main/webapp/repo/http-cmsx.algorythm.de-cmsx-0.0.1/cmsx/resources/'||$path
 	let $mimeType := web:content-type($absPath)

@@ -1,9 +1,10 @@
 <site xmlns="http://cms.algorythm.de/common/Site"
-		theme="cmsx:default-theme"
+		default-theme="cmsx:default-theme"
 		default-renderer="cmsx:render-page-html-content"
+		id="algorythm.de"
 		title="algorythm.de"
 		renderer="cmsx:generate-start-page">
-	<page id="projects" src="contents/projects.xml">
+	<page id="projects" src="contents/projects.xml" title="Projekte">
 		<page id="algorythm-cms" src="contents/projects/algorythm-cms.xml" />
 		<page id="goolap" src="contents/projects/goolap.xml" />
 		<page id="mdsd-dsls" src="contents/projects/mdsd-dsls.xml" />
