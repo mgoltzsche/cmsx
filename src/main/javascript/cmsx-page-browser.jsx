@@ -4,36 +4,23 @@ var WebDavClient = require('./webdav-client.js');
 var TreeView = require('./cmsx-tree-view.jsx');
 var CmsxPagePreferences = require('./cmsx-page-preferences.jsx');
 var CmsxService = require('./cmsx-service.js');
-var absUrlRegex = /^https?:\/\//
 
 var CmsxPageBrowser = React.createClass({
 	getDefaultProps: function() {
 		return {
-			page: '',
+			pageID: null,
 			service: new CmsxService('')
 		};
 	},
 	getInitialState: function() {
-		return {
-			rootURL: '',
-		};
+		return {};
 	},
 	componentDidMount: function() {
-		var pageHref = this.props.page;
-		if (!pageHref) {
-			pageHref = window.location.href;
-			var suffixPos = pageHref.indexOf('?') || pageHref.indexOf('#');
-			if (suffixPos < -1) {
-				pageHref = pageHref.substring(0, suffixPos);
-			}
-			pageHref = pageHref.substring(0, pageHref.length - 5) + 'service';
-		}
-		this.show(pageHref);
+		this.show(this.props.pageID);
 	},
 	componentWillUpdate: function(nextProps, nextState) {
-		nextState.rootURL = this.state.rootURL;
-		if (nextProps.page !== this.props.page) {
-			this.show(this.props.page);
+		if (nextProps.pageID !== this.props.pageID) {
+			this.show(this.props.pageID);
 		}
 	},
 	render: function() {
@@ -41,39 +28,49 @@ var CmsxPageBrowser = React.createClass({
 			<TreeView ref="browser" className="cmsx-webdav-tree"
 				onSelectParent={this.handlePageSelect}
 				onSelectContent={this.handlePageSelect} />
-			<CmsxPagePreferences ref="preferences" />
+			<CmsxPagePreferences ref="preferences" onSave={this.onPageSave} />
 		</div>;
 	},
-	show: function(href) {
-		if (href === undefined || href === null) {
-			this.clear();
+	show: function(pageID) {
+		if (typeof pageID === 'string') {
+			this.props.service.loadPage(pageID, this.onPageLoaded);
 		} else {
-			var url = href.match(absUrlRegex) ? href : this.state.rootURL + href;
-
-			this.props.service.loadPage(url, this.onPageLoaded.bind(this, href));
+			this.clear();
 		}
 	},
 	clear: function() {
 		this.refs.browser.setParents([]);
 		this.refs.browser.setContents([]);
-//		this.refs.preview.show();
+		this.refs.preferences.setPage();
 	},
-	onPageLoaded: function(href, page) {
-		if (this.state.rootURL === '') { // Derive rootURL for following requests
-			this.state.rootURL = href.substring(0, href.length - (page.href + '/index.service').length);
-		}
-
+	onPageLoaded: function(page) {
 		page.parents.push(page);
 		this.refs.browser.setParents(page.parents.map(this.toViewModel));
 		this.refs.browser.setContents(page.children.map(this.toViewModel));
-		this.refs.preferences.setPage(page);
+		this.refs.preferences.setPage(this.pageAttrs(page));
+	},
+	pageAttrs: function(page) {
+		var attrs = {};
+
+		for (var k in page) {
+			if (page.hasOwnProperty(k) && typeof k === 'string' && typeof page[k] === 'string') {
+				attrs[k] = page[k];
+			}
+		}
+
+		return attrs;
 	},
 	toViewModel: function(page) {
+		page = this.pageAttrs(page);
+		page.id = page.id || '';
 		page.label = page.title || page.id;
-		return page
+		return page;
 	},
-	handlePageSelect: function(item) {
-		this.show(item.href + '/index.service');
+	onPageSave: function(page) {
+		this.props.service.updatePage(page, this.handlePageSelect);
+	},
+	handlePageSelect: function(page) {
+		this.show(page.id);
 	}
 });
 

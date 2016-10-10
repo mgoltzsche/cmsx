@@ -3,7 +3,7 @@ declare namespace s = "http://cms.algorythm.de/common/Site";
 
 declare
 %rest:GET
-%rest:path("/p/index.service")
+%rest:path("/service/page")
 %output:method("json")
 function p:get-page() {
   p:get-page('')
@@ -11,12 +11,11 @@ function p:get-page() {
 
 declare
 %rest:GET
-%rest:path("/p/{$path=.+}/index.service")
+%rest:path("/service/page/{$pageID=.*}")
 %output:method("json")
-function p:get-page($path as xs:string) {
+function p:get-page($pageID as xs:string) {
   (: TODO: Derive DB name from HTTP host header :)
   let $db := 'testdb'
-  let $pageID := fn:tokenize($path, '/')[last()]
   let $site := doc($db||'/cms-site.xml')/s:site
   let $page := if ($pageID)
     then $site//s:page[@id=$pageID]
@@ -29,18 +28,16 @@ function p:get-page($path as xs:string) {
       }
       return map:merge((p:map($page), $pageChildren))
     )
-    else fn:error(xs:QName('CMSXPAGENOTFOUND'), 'Page not found: '||$path)
+    else fn:error(xs:QName('CMSXPAGENOTFOUND'), 'Page not found: '||$pageID)
 };
 
 declare
 %rest:POST("{$pageAttrs}")
-%rest:path("/p/{$path=.+}/index.service")
+%rest:path("/service/page/{$pageID=.+}")
 %rest:consumes("application/json")
-%output:method("json")
-updating function p:update-page($path as xs:string, $pageAttrs as map(*)) {
+updating function p:update-page($pageID as xs:string, $pageAttrs as node()) {
   (: TODO: Derive DB name from HTTP host header :)
   let $db := 'testdb'
-  let $pageID := fn:tokenize($path, '/')[last()]
   let $site := doc($db||'/cms-site.xml')/s:site
   let $page := if ($pageID)
     then $site//s:page[@id=$pageID]
@@ -48,17 +45,14 @@ updating function p:update-page($path as xs:string, $pageAttrs as map(*)) {
   return if ($page)
     then (
       delete nodes $page/@*,
-      for $key in map:keys($pageAttrs)
-        return insert node attribute { $key } { $pageAttrs($key) } into $page
-    ) 
-    else fn:error(xs:QName('CMSXPAGENOTFOUND'), 'Page not found: '||$path) 
+      for $attr in $pageAttrs/*/child::*
+        return insert node attribute { $attr/name() } { $attr/text() } into $page
+    )
+    else fn:error(xs:QName('CMSXPAGENOTFOUND'), 'Page not found: '||$pageID) 
 };
 
 declare function p:map($page as node()) as map(*) {
-  map:merge((
-    for $attr in $page/@* return map { $attr/name(): $attr/string() },
-    map { 'href': p:href($page) }
-  ))
+  map:merge((for $attr in $page/@* return map { $attr/name(): $attr/string() }))
 };
 
 declare function p:href($page as node()) as xs:string {

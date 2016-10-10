@@ -1,7 +1,6 @@
 <site xmlns="http://cms.algorythm.de/common/Site"
 		default-theme="cmsx:default-theme"
 		default-renderer="cmsx:render-page-html-content"
-		id="algorythm.de"
 		title="algorythm.de"
 		renderer="cmsx:generate-start-page">
 	<page id="projects" src="contents/projects.xml" title="Projekte">

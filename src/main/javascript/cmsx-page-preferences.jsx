@@ -8,7 +8,8 @@ var CmsxPagePreferences = React.createClass({
 			page: {
 				id: '',
 				title: '',
-				renderer: ''
+				renderer: '',
+				src: ''
 			},
 			onSave: function(page) {}
 		};
@@ -19,7 +20,8 @@ var CmsxPagePreferences = React.createClass({
 			page: {
 				id: '',
 				title: '',
-				renderer: ''
+				renderer: '',
+				src: ''
 			}
 		};
 	},
@@ -35,10 +37,9 @@ var CmsxPagePreferences = React.createClass({
 		}
 	},
 	setPage: function(page) {
-		console.log('setPage')
 		this.setState({
 			pristine: true,
-			page: page
+			page: page || this.getInitialState().page
 		});
 		this.applyValues(page);
 	},
@@ -49,7 +50,6 @@ var CmsxPagePreferences = React.createClass({
 		input['renderer'].value = page.renderer || '';
 	},
 	handleChange: function(evt) {
-		console.log('handle change ' + evt.target.name);
 		this.state.page[evt.target.name] = evt.target.value;
 		this.setState({
 			pristine: false,
@@ -58,7 +58,10 @@ var CmsxPagePreferences = React.createClass({
 	},
 	handleSave: function(evt) {
 		evt.preventDefault();
-		console.log(this.state.page);
+		this.setState({
+			pristine: true,
+			page: this.state.page
+		});
 		this.props.onSave(this.state.page);
 	},
 	render: function() {
