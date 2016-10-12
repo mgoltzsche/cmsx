@@ -1,7 +1,7 @@
 var log = require('./logger.js')('CmsxTreeView');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ListView = require('./cmsx-list-view.jsx');
+var ListView = React.createFactory(require('./cmsx-list-view.js'));
 
 module.exports = React.createClass({
 	getDefaultProps: function() {
@@ -43,13 +43,18 @@ module.exports = React.createClass({
 		this.refs.contents.select(item);
 	},
 	render: function() {
-		return <div className={'cmsx-tree ' + this.props.className}>
-			<ListView ref="parents" className="cmsx-tree-parents"
-				items={this.state.parents}
-				onSelect={this.props.onSelectParent} />
-			<ListView ref="contents" className="cmsx-tree-contents"
-				items={this.state.contents}
-				onSelect={this.props.onSelectContent} />
-		</div>;
+		return React.DOM.div({className: 'cmsx-tree ' + this.props.className},
+			ListView({
+				ref: 'parents',
+				className: 'cmsx-tree-parents',
+				items: this.state.parents,
+				onSelect: this.props.onSelectParent
+			}),
+			ListView({
+				ref: 'contents',
+				className: 'cmsx-tree-contents',
+				items: this.state.contents,
+				onSelect: this.props.onSelectContent
+			}));
 	}
 });

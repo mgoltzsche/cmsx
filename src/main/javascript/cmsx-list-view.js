@@ -57,19 +57,18 @@ module.exports = React.createClass({
 	},
 	render: function() {
 		var className = 'cmsx-list' + (this.props.className ? ' ' + this.props.className : '');
-		var itemViews = this.state.items.map(function(item) {
-			return <CmsxListItem item={item}
-				onSelect={this.select}
-				key={item.id}
-				ref={item.id} />;
-		}.bind(this));
-		return <ul className={className}>
-			{itemViews}
-		</ul>
+		return React.DOM.ul({className: className}, this.state.items.map(function(item) {
+			return CmsxListItem({
+				item: item,
+				onSelect: this.select,
+				key: item.id,
+				ref: item.id
+			});
+		}.bind(this)));
 	}
 });
 
-var CmsxListItem = React.createClass({
+var CmsxListItem = React.createFactory(React.createClass({
 	updateSelection: function(selected) {
 		if (this.refs.view) { // Can be undefined when item changed
 			this.refs.view.className = 'cmsx-list-item ' + (selected ? 'cmsx-list-item-selected' : '');
@@ -82,8 +81,14 @@ var CmsxListItem = React.createClass({
 	render: function() {
 		var item = this.props.item;
 		var title = item.description || '';
-		return <li className="cmsx-list-item" ref="view">
-			<a title={title} onClick={this.handleItemClick} className="cmsx-item-label">{item.label}</a> 
-		</li>;
+		return React.DOM.li({
+				ref: 'view',
+				className: 'cmsx-list-item'
+			},
+			React.DOM.a({
+				title: title,
+				onClick: this.handleItemClick,
+				className: 'cmsx-item-label'
+			}, item.label));
 	}
-});
+}));

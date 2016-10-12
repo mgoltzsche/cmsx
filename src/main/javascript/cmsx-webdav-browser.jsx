@@ -2,7 +2,7 @@ var log = require('./logger.js')('CmsxWebDavView');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var WebDavClient = require('./webdav-client.js');
-var TreeView = require('./cmsx-tree-view.jsx');
+var TreeView = require('./cmsx-tree-view.js');
 var MediaView = require('./cmsx-media-view.jsx');
 
 module.exports = React.createClass({

@@ -1,7 +1,7 @@
 var log = require('./logger.js')('CmsxMediaView');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ImageView= require('./cmsx-image-view.jsx');
+var ImageView = require('./cmsx-image-view.jsx');
 var MediaPlayer = require('./cmsx-media-player.jsx');
 
 var MediaView = React.createClass({
