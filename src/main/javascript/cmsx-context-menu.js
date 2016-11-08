@@ -1,27 +1,35 @@
 var utils = require('./cmsx-utils.js');
 
-function ContextMenu() {
+function ContextMenu(options) {
 	var el = this._element = document.createElement('ul');
 	el.style.position = 'fixed';
 	el.style.display = 'block';
 	el.style.overflow = 'hidden';
 	this._visible = false;
 	this._items = [];
+	this._alignHorizontal = this._alignVertical = 'center';
+	this._axis = [
+		{
+			'alignProp': '_alignHorizontal',
+			'styleProp': 'left',
+			'classes': ['left', 'right']
+		},
+		{
+			'alignProp': '_alignVertical',
+			'styleProp': 'top',
+			'classes': ['top', 'bottom']
+		}
+	];
 	document.body.appendChild(this._element);
 	utils.bindAll(this);
+	this.setOptions(options);
 	this._update();
 }
 
 var menu = ContextMenu.prototype;
 
-menu.show = function(evt, optionContext, options) {
-	this._optionContext = optionContext;
-	this._options = options;
-
-	if (options.length === 0) {
-		this.hide();
-		return;
-	}
+menu.setOptions = function(options) {
+	this._options = options || [];
 
 	var item, i, li, a;
 
@@ -54,7 +62,10 @@ menu.show = function(evt, optionContext, options) {
 
 		this._items = this._items.slice(0, options.length);
 	}
+};
 
+menu.show = function(evt, context) {
+	this._context = context;
 	this._position(evt);
 
 	if (this._visible === false) {
@@ -67,7 +78,7 @@ menu.show = function(evt, optionContext, options) {
 
 menu.hide = function() {
 	if (this._visible === true) {
-		this._options = this._optionContext = null;
+		this._context = null;
 		this._visible = false;
 		this._update();
 		document.body.removeEventListener('keyup', this._handleEscapeKey);
@@ -76,7 +87,9 @@ menu.hide = function() {
 };
 
 menu._update = function() {
-	this._element.className = 'cmsx-context-menu' + (this._visible ? ' cmsx-context-menu-visible' : '');
+	this._element.className = 'cmsx-context-menu ' +
+		'cmsx-context-menu-' + this._alignVertical + '-' + this._alignHorizontal +
+		(this._visible ? ' cmsx-context-menu-visible' : '');
 	this._element.style.visibility = this._visible ? 'visible' : 'hidden';
 };
 
@@ -84,6 +97,7 @@ menu._position = function(evt) {
 	var el, dot, eventDoc, doc, body, pageX, pageY, menuWidth, menuHeight, mouseX, mouseY;
 	evt = evt || window.event;
 
+	// TODO: move into setOptions method
 	// Get menu size
 	el = this._element;
 	el.style.left = '0px';
@@ -108,8 +122,31 @@ menu._position = function(evt) {
     	mouseY = evt.pageY;
 	}
 
-	el.style.left = mouseX + 'px';
-	el.style.top = mouseY + 'px';
+	this._setValidPosition(this._axis[0], window.innerWidth, mouseX, mouseX, menuWidth);
+	this._setValidPosition(this._axis[1], window.innerHeight, mouseY, mouseY, menuHeight);
+};
+
+menu._setValidPosition = function(axis, available, offsetLower, offsetHigher, required) {
+	var pos;
+	if (this._isValidAxisValue(available, offsetHigher, required)) {
+		// Set higher (right/bottom)
+		pos = offsetHigher;
+		this[axis.alignProp] = axis.classes[1];
+	} else if (this._isValidAxisValue(available, offsetLower - required, required)) {
+		// Set lower (left/top)
+		pos = offsetLower - required;
+		this[axis.alignProp] = axis.classes[0];
+	} else {
+		// Fallback: center
+		pos = available / 2 - required / 2;
+		this[axis.alignProp] = 'center';
+	}
+
+	this._element.style[axis.styleProp] = pos + 'px';
+};
+
+menu._isValidAxisValue = function(available, offset, required) {
+	return offset >= 0 && available >= required && offset + required <= available;
 };
 
 menu._handleOptionClick = function(evt) {
@@ -117,7 +154,7 @@ menu._handleOptionClick = function(evt) {
 	var el = evt.target || evt.srcElement;
 	evt.preventDefault();
 	var option = this._options[el.getAttribute('data-option')];
-	option.callback(this._optionContext, option);
+	option.callback(this._context, option);
 };
 
 menu._handleEscapeKey = function(evt) {
@@ -136,7 +173,7 @@ menu.destroy = function() {
 	}
 
 	document.body.removeChild(this._element);
-	this._options = this._optionContext = this._element = this._items = null;
+	this._options = this._context = this._element = this._items = null;
 };
 
 module.exports = ContextMenu;

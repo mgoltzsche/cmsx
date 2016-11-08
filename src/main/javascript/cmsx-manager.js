@@ -124,7 +124,7 @@ function CmsxManager() {
 			var PageBrowser = React.createFactory(require('./cmsx-page-browser.js'));
 			ReactDOM.render(PageBrowser({
 				pageID: pageID,
-				onPageOptions: this.showPageOptionsDialog,
+				onPageOptions: this.showPageContextMenu,
 				service: this.service}), element);
 		}
 	}.bind(this, content1));
@@ -156,29 +156,25 @@ manager.createDialog = function(dialogComponent) {
 	return ReactDOM.render(dialogComponent, container);
 };
 
-manager.showContextMenu = function(evt, context, options) {
-	if (!this._contextMenu) {
-		this._contextMenu = new ContextMenu();
+manager.showPageContextMenu = function(page, evt) {
+	if (!this._pageContextMenu) {
+		this._pageContextMenu = new ContextMenu([
+     		{
+    			label: 'edit',
+    			callback: this.showPageEditDialog
+    		},
+    		{
+    			label: 'delete',
+    			callback: this.deletePage
+    		},
+    		{
+    			label: 'add',
+    			callback: this.showPageCreateDialog
+    		}
+    	]);
 	}
 
-	this._contextMenu.show(evt, context, options);
-};
-
-manager.showPageOptionsDialog = function(page, evt) {
-	this.showContextMenu(evt, page, [
-		{
-			label: 'edit',
-			callback: this.showPageEditDialog
-		},
-		{
-			label: 'delete',
-			callback: this.deletePage
-		},
-		{
-			label: 'add',
-			callback: this.showPageCreateDialog
-		}
-	]);
+	this._pageContextMenu.show(evt, page);
 };
 
 manager.showPageEditDialog = function(page) {
