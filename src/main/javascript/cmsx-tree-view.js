@@ -9,8 +9,8 @@ module.exports = React.createClass({
 			className: '',
 			parents: [],
 			contents: [],
-			onSelectParent: function(item) {},
-			onSelectContent: function(item) {}
+			onSelect: function(item) {},
+			onOptions: null
 		};
 	},
 	getInitialState: function() {
@@ -31,6 +31,23 @@ module.exports = React.createClass({
 			this.setContents(contents);
 		}
 	},
+	render: function() {
+		return React.DOM.div({className: 'cmsx-tree ' + this.props.className},
+			ListView({
+				ref: 'parents',
+				className: 'cmsx-tree-parents',
+				items: this.state.parents,
+				onSelect: this.props.onSelect,
+				onOptions: this.props.onOptions
+			}),
+			ListView({
+				ref: 'contents',
+				className: 'cmsx-tree-contents',
+				items: this.state.contents,
+				onSelect: this.props.onSelect,
+				onOptions: this.props.onOptions
+			}));
+	},
 	setParents: function(parents) {
 		this.state.parents = parents;
 		this.refs.parents.setItems(parents);
@@ -41,20 +58,5 @@ module.exports = React.createClass({
 	},
 	select: function(item) {
 		this.refs.contents.select(item);
-	},
-	render: function() {
-		return React.DOM.div({className: 'cmsx-tree ' + this.props.className},
-			ListView({
-				ref: 'parents',
-				className: 'cmsx-tree-parents',
-				items: this.state.parents,
-				onSelect: this.props.onSelectParent
-			}),
-			ListView({
-				ref: 'contents',
-				className: 'cmsx-tree-contents',
-				items: this.state.contents,
-				onSelect: this.props.onSelectContent
-			}));
 	}
 });

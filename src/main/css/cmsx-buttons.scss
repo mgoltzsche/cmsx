@@ -1,0 +1,52 @@
+div.cmsx-buttons {
+	display: inline-block;
+	float: right;
+
+	& > ul {
+		display: block;
+		position: absolute;
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		background: $actionColor;
+		@include border-radius($borderRadius);
+	}
+
+	&.cmsx-collapsed > ul {
+		display: none;
+	}
+
+	& > li {
+		display: inline-block;
+		margin: 0 0 0 $margin/2;
+		padding: 0;
+
+		&:first-child {
+			margin: 0;
+		}
+	}
+
+	&:before {
+		display: inline-block;
+		content: '#';
+		cursor: pointer;
+	}
+}
+
+a.cmsx-button, a.cmsx-button:hover, a.cmsx-button:active {
+	display: inline-block;
+	padding: $margin/2;
+	@include border-radius($borderRadius);
+	background: $actionColor;
+	color: $backgroundColor;
+	line-height: 1em;
+	cursor: pointer;
+	text-decoration: none;
+
+	.cmsx-button-label {
+	}
+}
+
+/* not yet used: a.cmsx-button.cmsx-active, a.cmsx-button:active {
+	@include box-shadow(0 0 0 1px rgba(0, 0, 0, 0.15) inset, 0 0 6px rgba(0, 0, 0, 0.2) inset);
+}*/

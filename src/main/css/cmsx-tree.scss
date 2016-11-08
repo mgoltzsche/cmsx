@@ -2,15 +2,13 @@
 
 	ul.cmsx-tree-parents {
 		border-bottom: none;
+		padding-left: $margin;
 
 		li.cmsx-list-item {
 			display: inline-block;
-			border-bottom: none;
 			padding: $margin/2 $margin/2 $margin/2 0;
-
-			&:first-child {
-				padding-left: $margin;
-			}
+			border-bottom: none;
+			width: auto;
 
 			&:before {
 				content: '\000bb';
@@ -19,6 +17,16 @@
 
 			&:first-child:before {
 				display:none
+			}
+
+			&.cmsx-additional:before {
+				content: '';
+				padding: 0;
+			}
+
+			a.cmsx-item-label {
+				margin: 0;
+				display: inline;
 			}
 		}
 	}

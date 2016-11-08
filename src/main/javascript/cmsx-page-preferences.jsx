@@ -1,5 +1,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
+var Dialog = require('./cmsx-dialog.js');
 
 var CmsxPagePreferences = React.createClass({
 	getDefaultProps: function() {
@@ -36,12 +37,24 @@ var CmsxPagePreferences = React.createClass({
 			this.applyValues(nextState.page);
 		}
 	},
-	setPage: function(page) {
+	showPage: function(page) {
+		(page ? this.refs.dialog.show : this.dialog.hide)();
 		this.setState({
 			pristine: true,
-			page: page || this.getInitialState().page
+			page: this.pageAttrs(page || this.getInitialState().page)
 		});
 		this.applyValues(page);
+	},
+	pageAttrs: function(page) {
+		var attrs = {};
+
+		for (var k in page) {
+			if (page.hasOwnProperty(k) && typeof k === 'string' && typeof page[k] === 'string') {
+				attrs[k] = page[k];
+			}
+		}
+
+		return attrs;
 	},
 	applyValues: function(page) {
 		var input = this.refs.form.elements;
@@ -66,20 +79,22 @@ var CmsxPagePreferences = React.createClass({
 	},
 	render: function() {
 		var className = 'cmsx-page-preferences ' + this.props.className + (this.state.pristine ? ' pristine' : ' dirty');
-		return <form ref="form" className={className}>
-			<div className="page-identity">
-				<div>
-					ID: <input name="id" type="text" onChange={this.handleChange} />
+		return <Dialog ref="dialog" onClose={this.handleClose}>
+			<form ref="form" className={className}>
+				<div className="page-identity">
+					<div>
+						ID: <input name="id" type="text" onChange={this.handleChange} />
+					</div>
+					<div>
+						Title: <input name="title" type="text" onChange={this.handleChange} />
+					</div>
+					<div>
+						Renderer: <input name="renderer" type="text" onChange={this.handleChange} />
+					</div>
+					<button onClick={this.handleSave}>save</button>
 				</div>
-				<div>
-					Title: <input name="title" type="text" onChange={this.handleChange} />
-				</div>
-				<div>
-					Renderer: <input name="renderer" type="text" onChange={this.handleChange} />
-				</div>
-				<button onClick={this.handleSave}>save</button>
-			</div>
-		</form>;
+			</form>
+		</Dialog>;
 	}
 });
 

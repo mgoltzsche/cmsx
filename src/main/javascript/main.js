@@ -14,6 +14,4 @@ var CmsxManager = require('./cmsx-manager.js');
 
 $(document).ready(function() {
 	var cmsx = new CmsxManager();
-	cmsx.installToolbar();
-	cmsx.setupContentEditing();
 });

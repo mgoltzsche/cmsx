@@ -11,7 +11,8 @@ module.exports = React.createClass({
 		return {
 			items: [],
 			className: '',
-			onSelect: function(item) {}
+			onSelect: function(item) {},
+			onOptions: null
 		};
 	},
 	getInitialState: function() {
@@ -57,14 +58,17 @@ module.exports = React.createClass({
 	},
 	render: function() {
 		var className = 'cmsx-list' + (this.props.className ? ' ' + this.props.className : '');
-		return React.DOM.ul({className: className}, this.state.items.map(function(item) {
+		var items = this.state.items.map(function(item) {
 			return CmsxListItem({
 				item: item,
 				onSelect: this.select,
+				onOptions: this.props.onOptions,
 				key: item.id,
 				ref: item.id
 			});
-		}.bind(this)));
+		}.bind(this));
+
+		return React.DOM.ul({className: className}, items);
 	}
 });
 
@@ -78,9 +82,18 @@ var CmsxListItem = React.createFactory(React.createClass({
 		e.preventDefault();
 		this.props.onSelect(this.props.item);
 	},
+	handleOptionsClick: function(e) {
+		e.preventDefault();
+		this.props.onOptions(this.props.item);
+	},
 	render: function() {
 		var item = this.props.item;
 		var title = item.description || '';
+		var buttons = this.props.onOptions ? React.DOM.a({
+				className: 'cmsx-item-options',
+				onClick: this.handleOptionsClick
+			}) : null;
+
 		return React.DOM.li({
 				ref: 'view',
 				className: 'cmsx-list-item'
@@ -89,6 +102,7 @@ var CmsxListItem = React.createFactory(React.createClass({
 				title: title,
 				onClick: this.handleItemClick,
 				className: 'cmsx-item-label'
-			}, item.label));
+			}, item.label),
+			buttons);
 	}
 }));

@@ -31,8 +31,7 @@ module.exports = React.createClass({
 	render: function() {
 		return <div className="cmsx-webdav-browser">
 			<TreeView ref="browser" className="cmsx-webdav-tree"
-				onSelectParent={this.handleBrowserSelect}
-				onSelectContent={this.handleBrowserSelect} />
+				onSelect={this.handleBrowserSelect} />
 			<MediaView ref="preview" />
 		</div>;
 	},
@@ -133,37 +132,3 @@ module.exports = React.createClass({
 		}
 	}
 });
-
-/*var WebDavBreadcrumbs = React.createClass({
-	getDefaultProps: function() {
-		return {
-			path: '',
-			onSelect: function(href) {}
-		};
-	},
-	render: function() {
-		var segments = (this.props.path || '').split('/').slice(1);
-		var href = '';
-		var breadcrumbs = segments.map(function(segment) {
-			href += '/' + segment;
-			var handleClick = function(href, e) {
-				try {
-					e.preventDefault();
-					this.props.onSelect(href);
-				} catch(e) {
-					log.error('Breadcrumb select failed', e);
-				}
-			}.bind(this, href);
-
-			return <li key={href}>
-				<a href={'#' + href} title={href} onClick={handleClick}>{decodeURIComponent(segment)}</a>
-			</li>
-		}.bind(this));
-
-		return <nav className="webdav-breadcrumbs">
-			<ul>
-				{breadcrumbs}
-			</ul>
-		</nav>
-	}
-});*/

@@ -140,10 +140,10 @@
 		</dependency>
 	</dependencies>
 
-	<distributionManagement>
+<!-- 	<distributionManagement>
 		<snapshotRepository>
 			<id>snapshots</id>
 			<url>http://repository.algorythm.de/content/repositories/snapshots</url>
 		</snapshotRepository>
-	</distributionManagement>
+	</distributionManagement>-->
 </project>

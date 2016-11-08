@@ -3,6 +3,12 @@ var $ = require('jquery');
 function CmsxService(rootURI) {
 	if (rootURI === undefined || rootURI === null) {throw 'Undefined CmsxService rootURI';}
 	this._rootURI = rootURI;
+
+	for (var k in this) {
+		if (typeof this[k] === 'function') {
+			this[k] = this[k].bind(this);
+		}
+	}
 }
 
 var service = CmsxService.prototype;
