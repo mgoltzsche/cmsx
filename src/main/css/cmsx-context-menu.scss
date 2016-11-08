@@ -1,0 +1,29 @@
+ul.cmsx-context-menu {
+	list-style-type: none;
+	margin: 0;
+	padding: $margin/2 0;
+	position: fixed;
+	z-index: 999;
+	background: $backgroundColor;
+	border: 1px solid $borderColor;
+	@include border-radius($borderRadius);
+	@include box-shadow(1px 2px 5px rgba(0,0,0,.5));
+
+	li {
+		margin: 0;
+		padding: 0;
+		display: block;
+
+		a, a:visited, a:hover, a:active, a:focus {
+			display: block;
+			padding: $margin/2 $margin;
+			color: $actionColor;
+			text-decoration: none;
+		}
+
+		a:hover, a:active, a:focus {
+			background: $actionColor;
+			color: $backgroundColor;
+		}
+	}
+}

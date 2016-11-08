@@ -3,6 +3,7 @@ var saveExt = require('./cmsx-editor-save-extension.js');
 var CmsxService = require('./cmsx-service.js');
 var toolbar = require('./cmsx-toolbar.js');
 var WebDavClient = require('./webdav-client.js');
+var ContextMenu = require('./cmsx-context-menu.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
 
@@ -56,9 +57,6 @@ function CmsxManager() {
 			this[k] = this[k].bind(this);
 		}
 	}
-	/*this.showPageOptionsDialog = this.showPageOptionsDialog.bind(this);
-	this.showPageEditDialog = this.showPageEditDialog.bind(this);
-	this.showOptionsDialog = this.showOptionsDialog.bind(this);*/
 
 	this.service = new CmsxService('');
 	this.syncManager = new ContentSyncManager(function(changes) {
@@ -158,17 +156,16 @@ manager.createDialog = function(dialogComponent) {
 	return ReactDOM.render(dialogComponent, container);
 };
 
-manager.showOptionsDialog = function(message, context, options) {
+manager.showContextMenu = function(evt, context, options) {
 	if (!this._contextMenu) {
-		var ContextMenu = React.createFactory(require('./cmsx-context-menu.js'));
-		this._contextMenu = this.createDialog(ContextMenu());
+		this._contextMenu = new ContextMenu();
 	}
 
-	this._contextMenu.show(message, context, options);
+	this._contextMenu.show(evt, context, options);
 };
 
-manager.showPageOptionsDialog = function(page) {
-	this.showOptionsDialog('Page ' + page.id + ' options', page, [
+manager.showPageOptionsDialog = function(page, evt) {
+	this.showContextMenu(evt, page, [
 		{
 			label: 'edit',
 			callback: this.showPageEditDialog

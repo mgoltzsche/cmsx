@@ -78,13 +78,13 @@ var CmsxListItem = React.createFactory(React.createClass({
 			this.refs.view.className = 'cmsx-list-item ' + (selected ? 'cmsx-list-item-selected' : '');
 		}
 	},
-	handleItemClick: function(e) {
-		e.preventDefault();
+	handleItemClick: function(evt) {
+		evt.preventDefault();
 		this.props.onSelect(this.props.item);
 	},
-	handleOptionsClick: function(e) {
-		e.preventDefault();
-		this.props.onOptions(this.props.item);
+	handleOptionsClick: function(evt) {
+		evt.preventDefault();
+		this.props.onOptions(this.props.item, evt);
 	},
 	render: function() {
 		var item = this.props.item;
