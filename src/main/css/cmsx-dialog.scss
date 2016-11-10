@@ -1,52 +1,69 @@
-.dialog-modal-overlay {
-	z-index: 900;
+.cmsx-modal-overlay, .cmsx-modal-click-zone {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
+	visibility: visible;
+}
+.cmsx-modal-overlay {
+	z-index: 900;
 	background: #000000;
 	background-repeat: no-repeat;
     background-attachment: fixed;
-    visibility: visible;
     @include gradient-radial(#aaaaaa, #000000);
-    @include opacity(70);
+	@include opacity(70);
     @include transition(opacity $animationLength, visibility $animationLength ease-in);
 
-	&.hidden {
+	&.cmsx-hidden {
+		visibility: hidden;
 		@include opacity(0);
+	}
+}
+.cmsx-modal-click-zone {
+	z-index: 987;
+	background: #000000;
+	@include opacity(0);
+
+	&.cmsx-hidden {
 		visibility: hidden;
 	}
 }
+
 
 .cmsx-dialog {
 	position: fixed;
 	top: 50%;
 	left: 50%;
-	z-index: 999;
+	z-index: 990;
 	padding: 10px;
 	@include translate(-50%, -50%);
 	background: $backgroundColor;
 	border: 1px solid $borderColor;
 	@include border-radius($borderRadius);
-	@include box-shadow(3px 5px 20px rgba(0,0,0,.5));
+	@include box-shadow(1px 3px 10px rgba(0,0,0,.5));
 
 	&.cmsx-dialog-hidden {
+		visibility: hidden;
 		top: -2000px;
-		@include transition(top $animationLength ease-in);
 	}
 
 	&.cmsx-dialog-visible {
+		visibility: visible;
 		top: 50%;
-		
 	}
 
 	&.cmsx-dialog-active, &.cms-dialog-visible {
-		@include transition(top $animationLength ease-out, opacity $animationLength ease-out);
+		@include transition(top $animationLength ease-out, opacity $animationLength ease-out, visibility $animationLength ease-in);
 	}
 
 	&.cmsx-dialog-inactive, &.cms-dialog-hidden {
-		@include transition(top $animationLength ease-in, opacity $animationLength ease-in);
+		@include transition(top $animationLength ease-in, opacity $animationLength ease-in, visibility $animationLength ease-in);
+	}
+
+	.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
+		visibility: visible;
+		@include transition(opacity $animationLength, visibility $animationLength ease-in);
 	}
 
 	&.cmsx-dialog-active {
@@ -58,16 +75,13 @@
 	}
 
 	&.cmsx-dialog-inactive {
-		@include opacity(10);
+		@include opacity(25);
+		@include box-shadow(1px 3px 5px rgba(0,0,0,.5));
 
 		.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
 			visibility: hidden;
 			@include opacity(0);
 		}
-	}
-
-	.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
-		@include transition(opacity $animationLength, visibility $animationLength ease-in);
 	}
 
 	.cmsx-dialog-header {

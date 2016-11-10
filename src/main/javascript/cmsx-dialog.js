@@ -4,25 +4,35 @@ var utils = require('./cmsx-utils.js');
 function ModalOverlay(onClick) {
 	this._onClick = onClick;
 	this._hidden = true;
-	var modalElement = this._element = document.createElement('div');
-	modalElement.className = 'dialog-modal-overlay hidden';
-	modalElement.addEventListener('click', onClick);
-	document.body.appendChild(modalElement);
-	this._element = modalElement;
+	this._overlay = document.createElement('div');
+	this._overlay.className = 'cmsx-modal-overlay cmsx-hidden';
+	this._clickZone = document.createElement('div');
+	this._clickZone.className = 'cmsx-modal-click-zone cmsx-hidden';
+	this._clickZone.addEventListener('click', onClick);
+	document.body.appendChild(this._overlay);
+	document.body.appendChild(this._clickZone);
 }
 
 var overlay = ModalOverlay.prototype;
 
+overlay.destroy = function() {
+	this._clickZone.removeEventListener('click', this._onClick);
+	this._clickZone.parentElement.removeChild(this._clickZone);
+	this._overlay.parentElement.removeChild(this._overlay);
+};
+
 overlay.show = function() {
 	if (this._hidden) {
-		this._element.className = 'dialog-modal-overlay';
+		this._overlay.className = 'cmsx-modal-overlay cmsx-visible';
+		this._clickZone.className = 'cmsx-modal-click-zone cmsx-visible';
 		this._hidden = false;
 	}
 };
 
 overlay.hide = function() {
 	if (!this._hidden) {
-		this._element.className = 'dialog-modal-overlay hidden';
+		this._overlay.className = 'cmsx-modal-overlay cmsx-hidden';
+		this._clickZone.className = 'cmsx-modal-click-zone cmsx-hidden';
 		this._hidden = true;
 	}
 };
@@ -42,21 +52,13 @@ DialogStack.prototype.init = function() {
 };
 
 DialogStack.prototype.pushDialog = function(dialog) {
-	this.init();
-
 	if (this._dialogs.length > 0) { // hide last dialog
 		this._dialogs[this._dialogs.length - 1].setActive(false);
 	}
 
 	this._modalOverlay.show();
 	this._dialogs.push(dialog);
-
-	var zIndex = 990;
-	for (var i = this._dialogs.length - 1; i >= 0; i--) {
-		this._dialogs[i].getElements().container.style.zIndex = zIndex;
-		zIndex -= 3;
-	}
-	this._modalOverlay._element.style.zIndex = zIndex;
+	this._updateZIndex();
 };
 
 DialogStack.prototype.popDialog = function(dialog) {
@@ -64,6 +66,7 @@ DialogStack.prototype.popDialog = function(dialog) {
 
 	if (this._dialogs.length > 0) { // show last dialog
 		this._dialogs[this._dialogs.length - 1].setActive(true);
+		this._updateZIndex();
 	} else {
 		this._modalOverlay.hide();
 	}
@@ -77,6 +80,13 @@ DialogStack.prototype._handleModalOverlayClick = function() {
 	}
 };
 
+DialogStack.prototype._updateZIndex = function() {
+	var zIndex = 990;
+	for (var i = this._dialogs.length - 1; i >= 0; i--) {
+		this._dialogs[i].getElements().container.style.zIndex = zIndex;
+		zIndex -= 5;
+	}
+};
 
 function CmsxDialog(dialogStack, prefs) {
 	utils.bindAll(this);
@@ -95,8 +105,8 @@ function CmsxDialog(dialogStack, prefs) {
 	this._resizeProportional = !!prefs._resizeProportional;
 	this._prefWidth = prefs.preferredWidth || 0;
 	this._prefHeight = prefs.preferredHeight || 0;
-	this._minMarginX = typeof prefs.minMarginX == 'number' ? prefs.minMarginX : 20;
-	this._minMarginY = typeof prefs.minMarginY == 'number' ? prefs.minMarginY : 20;
+	this._minMarginX = typeof prefs.minMarginX == 'number' ? prefs.minMarginX : 10;
+	this._minMarginY = typeof prefs.minMarginY == 'number' ? prefs.minMarginY : 10;
 	this._visible = false;
 	this._active = false;
 
@@ -305,6 +315,7 @@ dialog._handleEscapeKey = function(evt) {
 
 function DialogFactory(dialogStack) {
 	return function(props) {
+		dialogStack.init();
 		return new CmsxDialog(dialogStack, props);
 	};
 }
