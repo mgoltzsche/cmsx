@@ -8,18 +8,6 @@ function ContextMenu(options) {
 	this._visible = false;
 	this._items = [];
 	this._alignHorizontal = this._alignVertical = 'center';
-	this._axis = [
-		{
-			'alignProp': '_alignHorizontal',
-			'styleProp': 'left',
-			'classes': ['left', 'right']
-		},
-		{
-			'alignProp': '_alignVertical',
-			'styleProp': 'top',
-			'classes': ['top', 'bottom']
-		}
-	];
 	document.body.appendChild(this._element);
 	utils.bindAll(this);
 	this.setOptions(options);
@@ -27,6 +15,32 @@ function ContextMenu(options) {
 }
 
 var menu = ContextMenu.prototype;
+
+menu._axis = [
+	{
+		alignProp: '_alignHorizontal',
+		styleProp: 'left',
+		classes: ['left', 'right']
+	},
+	{
+		alignProp: '_alignVertical',
+		styleProp: 'top',
+		classes: ['top', 'bottom']
+	}
+];
+
+menu.destroy = function() {
+	this.hide();
+
+	for (var i = 0; i < this._items.length; i++) {
+		var item = this._items[i];
+		item.a.removeEventListener('click', this._handleOptionClick);
+		this._element.removeChild(item.li);
+	}
+
+	document.body.removeChild(this._element);
+	this._options = this._context = this._element = this._items = null;
+};
 
 menu.setOptions = function(options) {
 	this._options = options || [];
@@ -72,7 +86,8 @@ menu.show = function(evt, context) {
 		this._visible = true;
 		this._update();
 		document.body.addEventListener('keyup', this._handleEscapeKey);
-		document.body.addEventListener('click', this.hide);
+		document.body.addEventListener('click', this._handleDocumentClick);
+		this._element.addEventListener('click', this._handleElementClick, true);
 	}
 };
 
@@ -82,7 +97,8 @@ menu.hide = function() {
 		this._visible = false;
 		this._update();
 		document.body.removeEventListener('keyup', this._handleEscapeKey);
-		document.body.removeEventListener('click', this.hide);
+		document.body.removeEventListener('click', this._handleDocumentClick);
+		this._element.removeEventListener('click', this._handleElementClick, true);
 	}
 };
 
@@ -149,31 +165,32 @@ menu._isValidAxisValue = function(available, offset, required) {
 	return offset >= 0 && available >= required && offset + required <= available;
 };
 
+menu._handleDocumentClick = function(evt) {
+	if (this._elementClicked) {
+		this._elementClicked = false;
+	} else {
+		this.hide();
+	}
+};
+
+menu._handleElementClick = function(evt) {
+	this._elementClicked = true;
+};
+
 menu._handleOptionClick = function(evt) {
 	evt = evt || window.event;
-	var el = evt.target || evt.srcElement;
+	var ctx, option, el = evt.target || evt.srcElement;
 	evt.preventDefault();
-	var option = this._options[el.getAttribute('data-option')];
-	option.callback(this._context, option);
+	ctx = this._context;
+	option = this._options[el.getAttribute('data-option')];
+	option.callback(ctx, option);
+	this.hide();
 };
 
 menu._handleEscapeKey = function(evt) {
 	if (evt.keyCode === 27) {
 		this.hide();
 	}
-};
-
-menu.destroy = function() {
-	this.hide();
-
-	for (var i = 0; i < this._items.length; i++) {
-		var item = this._items[i];
-		item.a.removeEventListener('click', this._handleOptionClick);
-		this._element.removeChild(item.li);
-	}
-
-	document.body.removeChild(this._element);
-	this._options = this._context = this._element = this._items = null;
 };
 
 module.exports = ContextMenu;

@@ -29,7 +29,8 @@
 
 	&.cmsx-toolbar-show-content {
 		top: 0;
-		width: 80%;
+		width: 100%;
+		max-width: 600px;
 		height: 100%;
 		@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
 

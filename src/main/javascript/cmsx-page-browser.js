@@ -8,7 +8,7 @@ var CmsxPageBrowser = React.createClass({
 	getDefaultProps: function() {
 		return {
 			pageID: null,
-			service: new CmsxService(''),
+			loader: function(pageID, success) {},
 			onPageSelect: function(page) {},
 			onPageOptions: null
 		};
@@ -28,13 +28,13 @@ var CmsxPageBrowser = React.createClass({
 		return TreeView({
 			ref: 'browser',
 			className: 'cmsx-page-tree',
-			onSelect: this.handlePageSelect,
-			onOptions: this.props.onPageOptions
+			onSelect: this.handleSelect,
+			onOptions: this.props.onPageOptions ? this.handleOptions : null
 		});
 	},
 	show: function(pageID) {
 		if (typeof pageID === 'string') {
-			this.props.service.loadPage(pageID, this.onPageLoaded);
+			this.props.loader(pageID, this.onPageLoaded);
 		} else {
 			this.clear();
 		}
@@ -49,22 +49,18 @@ var CmsxPageBrowser = React.createClass({
 		this.refs.browser.setContents(page.children.map(this.toViewModel));
 	},
 	toViewModel: function(page) {
-		page.id = page.id || '';
-		page.label = page.title || page.id;
-		return page;
+		return {
+			id: page.id || '',
+			label: page.title || page.id,
+			page: page
+		};
 	},
-	handlePageSelect: function(page) {
-		this.show(page.id);
-		this.props.onPageSelect(page);
+	handleSelect: function(item) {
+		this.show(item.id);
+		this.props.onPageSelect(item.page);
 	},
-	editItem: function(item) {
-		this.props.service.editPage(item);
-	},
-	deleteItem: function(item) {
-		console.log('delete');
-	},
-	addItem: function(item) {
-		this.props.service.editPage({parent: item.id});
+	handleOptions: function(item, evt) {
+		this.props.onPageOptions(item.page, evt);
 	}
 });
 

@@ -4,8 +4,12 @@ var CmsxService = require('./cmsx-service.js');
 var toolbar = require('./cmsx-toolbar.js');
 var WebDavClient = require('./webdav-client.js');
 var ContextMenu = require('./cmsx-context-menu.js');
+var createDialog = require('./cmsx-dialog.js');
+var form = require('./cmsx-form.js');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var PageBrowser = React.createFactory(require('./cmsx-page-browser.js'));
+var utils = require('./cmsx-utils.js');
 
 function ContentSyncManager(onChanged) {
 	this._handler = onChanged;
@@ -52,11 +56,7 @@ sm.sync = function(change) {
 };
 
 function CmsxManager() {
-	for (var k in this) {
-		if (typeof this[k] === 'function') {
-			this[k] = this[k].bind(this);
-		}
-	}
+	utils.bindAll(this);
 
 	this.service = new CmsxService('');
 	this.syncManager = new ContentSyncManager(function(changes) {
@@ -117,15 +117,13 @@ function CmsxManager() {
 	var content1 = document.createElement('div');
 	var pageBrowserButton = new toolbar.CmsxToolbarContent('pages', content1, function(element) {
 		if (element.childNodes.length === 0) {
-			var pageID = window.location.href.match(/([^\/]+)\/index.html(\?|#|$)/)[1];
-			if (pageID === 'p')
-				pageID = '';
+			var pageID = this.currentPageID();
 			console.log('Page ID: ' + pageID);
-			var PageBrowser = React.createFactory(require('./cmsx-page-browser.js'));
 			ReactDOM.render(PageBrowser({
 				pageID: pageID,
-				onPageOptions: this.showPageContextMenu,
-				service: this.service}), element);
+				loader: this.service.loadPage,
+				onPageOptions: this.showPageContextMenu
+			}), element);
 		}
 	}.bind(this, content1));
 
@@ -144,16 +142,9 @@ function CmsxManager() {
 
 var manager = CmsxManager.prototype;
 
-manager.createDialog = function(dialogComponent) {
-	if (!this._dialogsElement) {
-		this._dialogsElement = document.createElement('div');
-		document.body.appendChild(this._dialogsElement);
-	}
-
-	var container = document.createElement('div');
-	this._dialogsElement.appendChild(container);
-
-	return ReactDOM.render(dialogComponent, container);
+manager.currentPageID = function() {
+	var id = window.location.href.match(/([^\/]+)\/index.html(\?|#|$)/)[1];
+	return id === 'p' ? '' : id;
 };
 
 manager.showPageContextMenu = function(page, evt) {
@@ -170,6 +161,10 @@ manager.showPageContextMenu = function(page, evt) {
     		{
     			label: 'add',
     			callback: this.showPageCreateDialog
+    		},
+    		{
+    			label: 'pick',
+    			callback: this.pickPage
     		}
     	]);
 	}
@@ -178,23 +173,51 @@ manager.showPageContextMenu = function(page, evt) {
 };
 
 manager.showPageEditDialog = function(page) {
-	if (!this._pagePreferences) {
-		var PagePreferences = React.createFactory(require('./cmsx-page-preferences.jsx'));
-		this._pagePreferences = this.createDialog(PagePreferences({
-			onSave: function() {}
-		}));
+	if (!this._pagePreferencesForm) {
+		this._pagePreferencesForm = new form.CmsxForm()
+			.addInput('id', 'ID')
+			.addInput('title', 'Title')
+			.addInput('renderer', 'Renderer')
+			.addPickableInput('src', 'Content', 'text', this.pickResource)
+			.addInput('stylesheet', 'XSLT stylesheet')
+			.addButton('save', this.savePage);
+		this._pagePreferencesDialog = createDialog();
+		this._pagePreferencesForm.mountAt(this._pagePreferencesDialog.getElements().content);
 	}
 
-	this._pagePreferences.showPage(page);
+	this._pagePreferencesForm.set(page);
+	this._pagePreferencesDialog.show();
+};
+
+manager.savePage = function(page) {
+	console.log(page);
+	//this.service.savePage(page);
 };
 
 manager.showPageCreateDialog = function(parentPage) {
-	this.showPageEditDialog({parent: parentPage.id});
+	this.showPageEditDialog({parent: parentPage.id}); // TODO: handle parent
 };
 
 manager.deletePage = function(page) {
 	console.log('TODO: delete page');
 	//this.service.deletePage(page.id);
+};
+
+manager.pickPage = function(setter) {
+	if (!this._pagePicker) {
+		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 300});
+		this._pagePicker = ReactDOM.render(PageBrowser({
+			loader: this.service.loadPage,
+			onPageOptions: this.showPageContextMenu
+		}), this._pagePickerDialog.getElements().content);
+	}
+
+	this._pagePicker.show(this.currentPageID());
+	this._pagePickerDialog.show();
+};
+
+manager.pickResource = function(setter) {
+	console.log('TODO: resource picker');
 };
 
 module.exports = CmsxManager;

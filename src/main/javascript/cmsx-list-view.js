@@ -33,7 +33,7 @@ module.exports = React.createClass({
 			this.setState({items: items});
 		}
 	},
-	select: function(item) {
+	select: function(item, evt) {
 		item = typeof item === 'string' ? {id: item} : item;
 
 		var itemView = this.refs[item.id];
@@ -51,7 +51,7 @@ module.exports = React.createClass({
 		}
 
 		try {
-			this.props.onSelect(item);
+			this.props.onSelect(item, evt);
 		} catch(e) {
 			log.error('CmsxListView.onSelect listener threw error', e);
 		}
@@ -80,7 +80,7 @@ var CmsxListItem = React.createFactory(React.createClass({
 	},
 	handleItemClick: function(evt) {
 		evt.preventDefault();
-		this.props.onSelect(this.props.item);
+		this.props.onSelect(this.props.item, evt);
 	},
 	handleOptionsClick: function(evt) {
 		evt.preventDefault();

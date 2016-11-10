@@ -8,15 +8,18 @@
 	background: #000000;
 	background-repeat: no-repeat;
     background-attachment: fixed;
-    @include gradient-radial(#eeeeee, #000000);
+    visibility: visible;
+    @include gradient-radial(#aaaaaa, #000000);
     @include opacity(70);
+    @include transition(opacity $animationLength, visibility $animationLength ease-in);
 
 	&.hidden {
-		display: none;
+		@include opacity(0);
+		visibility: hidden;
 	}
 }
 
-.dialog {
+.cmsx-dialog {
 	position: fixed;
 	top: 50%;
 	left: 50%;
@@ -28,12 +31,47 @@
 	@include border-radius($borderRadius);
 	@include box-shadow(3px 5px 20px rgba(0,0,0,.5));
 
-	&.hidden {
+	&.cmsx-dialog-hidden {
 		top: -2000px;
+		@include transition(top $animationLength ease-in);
 	}
 
-	.dialog-header {
-		.dialog-close {
+	&.cmsx-dialog-visible {
+		top: 50%;
+		
+	}
+
+	&.cmsx-dialog-active, &.cms-dialog-visible {
+		@include transition(top $animationLength ease-out, opacity $animationLength ease-out);
+	}
+
+	&.cmsx-dialog-inactive, &.cms-dialog-hidden {
+		@include transition(top $animationLength ease-in, opacity $animationLength ease-in);
+	}
+
+	&.cmsx-dialog-active {
+		@include opacity(100);
+
+		.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
+			@include opacity(100);
+		}
+	}
+
+	&.cmsx-dialog-inactive {
+		@include opacity(10);
+
+		.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
+			visibility: hidden;
+			@include opacity(0);
+		}
+	}
+
+	.cmsx-dialog-header, .cmsx-dialog-content, .cmsx-dialog-footer {
+		@include transition(opacity $animationLength, visibility $animationLength ease-in);
+	}
+
+	.cmsx-dialog-header {
+		.cmsx-dialog-close {
 			display: block;
 			position: absolute;
 			top: -0.6em;
@@ -56,7 +94,7 @@
 			}
 		}
 	}
-	.dialog-content {
+	.cmsx-dialog-content {
 		display: block;
 		margin: 0 auto;
 		overflow: hidden;
@@ -68,7 +106,7 @@
 			max-height: 100%;
 		}
 	}
-	.dialog-footer {
+	.cmsx-dialog-footer {
 		text-align: center;
 	}
 }

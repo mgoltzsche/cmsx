@@ -67,9 +67,9 @@ declare function cmsx:render-page-html-content($page as node()) as node() {
 };
 
 declare function cmsx:xslt-transform-cms-content($page as node()) as node() {
-  let $param := $page/@param/string()
-  let $xslt := if ($param)
-    then $param
+  let $pageXslt := $page/@stylesheet/string()
+  let $xslt := if ($pageXslt)
+    then $pageXslt
     else 'http://cmsx.algorythm.de/cmsx/html/Components.xsl'
   return fn:transform(map{
     'source-node': cmsx:page-content($page),
