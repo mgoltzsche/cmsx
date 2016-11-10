@@ -1,0 +1,15 @@
+.cmsx-form {
+	text-align: center;
+
+	.cmsx-input-container {
+		text-align: left;
+	}
+
+	.cmsx-input-container, .cmsx-button {
+		margin: $margin 0 0 0;
+	}
+
+	.cmsx-input-container:first-child, .cmsx-button:first-child {
+		margin: 0;
+	}
+}

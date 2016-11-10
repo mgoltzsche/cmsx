@@ -262,7 +262,7 @@ dialog.resize = function() {
 dialog._deriveOffset = function() {
 	var dialog = this._elements.container,
 		content = this._elements.content,
-		testWidth = window.innerWidth;
+		testWidth = window.innerWidth - this._minMarginX * 2;
 	content.style.visibility = 'hidden';
 	content.style.overflow = 'hidden';
 	content.style.display = 'block';
@@ -276,8 +276,8 @@ dialog._deriveOffset = function() {
 	content.style.minHeight = testSize;
 	content.style.maxWidth = testSize;
 	content.style.maxHeight = testSize;
-	this._offsetX = dialog.offsetWidth - 1000; // Detect offset x
-	this._offsetY = dialog.offsetHeight - 1000; // Detect offset y
+	this._offsetX = dialog.offsetWidth - testWidth; // Detect offset x
+	this._offsetY = dialog.offsetHeight - testWidth; // Detect offset y
 	log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
 	content.removeAttribute('style'); // Remove all inline styles used to detect offset
 	dialog.removeAttribute('style');

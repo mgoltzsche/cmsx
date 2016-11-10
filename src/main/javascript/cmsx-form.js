@@ -108,6 +108,7 @@ button.get = function(values) {return values;};
 function CmsxForm(onChange) {
 	this._inputs = {};
 	this._element = document.createElement('form');
+	this._element.className = 'cmsx-form';
 	this._idCount = 0;
 }
 

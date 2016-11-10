@@ -205,7 +205,7 @@ manager.deletePage = function(page) {
 
 manager.pickPage = function(setter) {
 	if (!this._pagePicker) {
-		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 300});
+		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 500});
 		this._pagePicker = ReactDOM.render(PageBrowser({
 			loader: this.service.loadPage,
 			onPageOptions: this.showPageContextMenu

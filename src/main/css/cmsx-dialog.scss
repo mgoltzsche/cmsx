@@ -41,7 +41,7 @@
 	background: $backgroundColor;
 	border: 1px solid $borderColor;
 	@include border-radius($borderRadius);
-	@include box-shadow(1px 3px 10px rgba(0,0,0,.5));
+	@include box-shadow(1px 3px 15px rgba(0,0,0,.5));
 
 	&.cmsx-dialog-hidden {
 		visibility: hidden;
@@ -109,6 +109,7 @@
 		}
 	}
 	.cmsx-dialog-content {
+		position: relative;
 		display: block;
 		margin: 0 auto;
 		overflow: hidden;
