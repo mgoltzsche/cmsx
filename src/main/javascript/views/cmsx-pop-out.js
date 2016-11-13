@@ -1,22 +1,28 @@
-var utils = require('./cmsx-utils.js');
+var utils = require('../cmsx-utils.js');
 
-function ContextMenu(options) {
-	var el = this._element = document.createElement('ul');
+/**
+ * Constructs a light weight pop out dialog. Hides on document click.
+ * Focusses on screen position. Usable as context or fly out menu.
+ * 
+ * @param className additional class name that should be set on root element
+ * @returns the created PopOut instance
+ */
+function PopOut(className) {
+	this._className = className;
+	var el = this._element = document.createElement('div');
 	el.style.position = 'fixed';
 	el.style.display = 'block';
 	el.style.overflow = 'hidden';
 	this._visible = false;
-	this._items = [];
 	this._alignHorizontal = this._alignVertical = 'center';
 	document.body.appendChild(this._element);
 	utils.bindAll(this);
-	this.setOptions(options);
 	this._update();
 }
 
-var menu = ContextMenu.prototype;
+var popOut = PopOut.prototype;
 
-menu._axis = [
+popOut._axis = [
 	{
 		alignProp: '_alignHorizontal',
 		styleProp: 'left',
@@ -29,57 +35,20 @@ menu._axis = [
 	}
 ];
 
-menu.destroy = function() {
+popOut.contentElement = function() {
+	return this._element;
+};
+
+popOut.destroy = function() {
 	this.hide();
-
-	for (var i = 0; i < this._items.length; i++) {
-		var item = this._items[i];
-		item.a.removeEventListener('click', this._handleOptionClick);
-		this._element.removeChild(item.li);
-	}
-
 	document.body.removeChild(this._element);
-	this._options = this._context = this._element = this._items = null;
+	this._element = null;
 };
 
-menu.setOptions = function(options) {
-	this._options = options || [];
-
-	var item, i, li, a;
-
-	for (i = 0; i < options.length; i++) {
-		if (this._items.length - 1 < i) {
-			// Create element when none available for reuse
-			a = document.createElement('a');
-			a.setAttribute('data-option', i);
-			a.addEventListener('click', this._handleOptionClick);
-			li = document.createElement('li');
-			li.appendChild(a);
-			this._element.appendChild(li);
-			item = {li: li, a: a, option: options[i]};
-			this._items.push(item);
-		} else {
-			item = this._items[i];
-		}
-
-		// Set entry's label
-		item.a.textContent = item.option.label;
-	}
-
-    // Remove unused elements
-	if (options.length < this._items.length) {
-		for (i = options.length; i < this._items.length; i++) {
-			item = this._items[i];
-			item.a.removeEventListener('click', this._handleOptionClick);
-			this._element.removeChild(item.li);
-		}
-
-		this._items = this._items.slice(0, options.length);
-	}
-};
-
-menu.show = function(evt, context) {
-	this._context = context;
+popOut.show = function(evt) {
+	evt = evt || window.event;
+    evt.preventDefault();
+    evt.stopPropagation();
 	this._position(evt);
 
 	if (this._visible === false) {
@@ -91,9 +60,8 @@ menu.show = function(evt, context) {
 	}
 };
 
-menu.hide = function() {
+popOut.hide = function() {
 	if (this._visible === true) {
-		this._context = null;
 		this._visible = false;
 		this._update();
 		document.body.removeEventListener('keyup', this._handleEscapeKey);
@@ -102,19 +70,18 @@ menu.hide = function() {
 	}
 };
 
-menu._update = function() {
-	this._element.className = 'cmsx-context-menu ' +
-		'cmsx-context-menu-' + this._alignVertical + '-' + this._alignHorizontal +
-		(this._visible ? ' cmsx-context-menu-visible' : '');
+popOut._update = function() {
+	this._element.className = 'cmsx-pop-out' +
+		(this._className ? ' ' + this._className : '') +
+		' cmsx-pop-out-' + this._alignVertical + '-' + this._alignHorizontal +
+		(this._visible ? ' cmsx-pop-out-visible' : ' cmsx-pop-out-hidden');
 	this._element.style.visibility = this._visible ? 'visible' : 'hidden';
 };
 
-menu._position = function(evt) {
+popOut._position = function(evt) {
 	var el, dot, eventDoc, doc, body, pageX, pageY, menuWidth, menuHeight, mouseX, mouseY;
-	evt = evt || window.event;
 
-	// TODO: move into setOptions method
-	// Get menu size
+	// Get content size
 	el = this._element;
 	el.style.left = '0px';
 	el.style.top = '0px';
@@ -142,7 +109,7 @@ menu._position = function(evt) {
 	this._setValidPosition(this._axis[1], window.innerHeight, mouseY, mouseY, menuHeight);
 };
 
-menu._setValidPosition = function(axis, available, offsetLower, offsetHigher, required) {
+popOut._setValidPosition = function(axis, available, offsetLower, offsetHigher, required) {
 	var pos;
 	if (this._isValidAxisValue(available, offsetHigher, required)) {
 		// Set higher (right/bottom)
@@ -161,11 +128,11 @@ menu._setValidPosition = function(axis, available, offsetLower, offsetHigher, re
 	this._element.style[axis.styleProp] = pos + 'px';
 };
 
-menu._isValidAxisValue = function(available, offset, required) {
+popOut._isValidAxisValue = function(available, offset, required) {
 	return offset >= 0 && available >= required && offset + required <= available;
 };
 
-menu._handleDocumentClick = function(evt) {
+popOut._handleDocumentClick = function(evt) {
 	if (this._elementClicked) {
 		this._elementClicked = false;
 	} else {
@@ -173,24 +140,14 @@ menu._handleDocumentClick = function(evt) {
 	}
 };
 
-menu._handleElementClick = function(evt) {
+popOut._handleElementClick = function(evt) {
 	this._elementClicked = true;
 };
 
-menu._handleOptionClick = function(evt) {
-	evt = evt || window.event;
-	var ctx, option, el = evt.target || evt.srcElement;
-	evt.preventDefault();
-	ctx = this._context;
-	option = this._options[el.getAttribute('data-option')];
-	option.callback(ctx, option);
-	this.hide();
-};
-
-menu._handleEscapeKey = function(evt) {
+popOut._handleEscapeKey = function(evt) {
 	if (evt.keyCode === 27) {
 		this.hide();
 	}
 };
 
-module.exports = ContextMenu;
+module.exports = PopOut;

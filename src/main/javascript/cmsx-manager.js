@@ -1,15 +1,13 @@
+var utils = require('./cmsx-utils.js');
 var MediumEditor = require('medium-editor');
 var saveExt = require('./cmsx-editor-save-extension.js');
-var CmsxService = require('./cmsx-service.js');
-var toolbar = require('./cmsx-toolbar.js');
-var WebDavClient = require('./webdav-client.js');
-var ContextMenu = require('./cmsx-context-menu.js');
-var createDialog = require('./cmsx-dialog.js');
-var form = require('./cmsx-form.js');
-var React = require('react');
-var ReactDOM = require('react-dom');
-var PageBrowser = React.createFactory(require('./cmsx-page-browser.js'));
-var utils = require('./cmsx-utils.js');
+var CmsxService = require('./services/cmsx-service.js');
+var WebDavClient = require('./services/webdav-client.js');
+var toolbar = require('./views/cmsx-site-toolbar.js');
+var ContextMenu = require('./views/cmsx-context-menu.js');
+var TreeView = require('./views/cmsx-tree-view.js');
+var CmsxPageManager = require('./cmsx-page-manager.js');
+var CmsxResourceManager = require('./cmsx-resource-manager.js');
 
 function ContentSyncManager(onChanged) {
 	this._handler = onChanged;
@@ -59,7 +57,9 @@ function CmsxManager() {
 	utils.bindAll(this);
 
 	this.service = new CmsxService('');
-	this.syncManager = new ContentSyncManager(function(changes) {
+	this.resourceManager = new CmsxResourceManager(new WebDavClient('admin', 'admin'), '/webdav');
+	this.pageManager = new CmsxPageManager(this.service, this.resourceManager.pickResource);
+	this.syncService = new ContentSyncManager(function(changes) {
 		for (var i = 0; i < changes.length; i++) {
 			var c = changes[i];
 			this.service.updateDocument(c.doc, c.xpath, c.content, c.contentType + '; charset=utf-8');
@@ -83,7 +83,7 @@ function CmsxManager() {
 				change.content = change.editable.textContent;
 				change.contentType = 'text/plain';
 				delete change.editable;
-				this.syncManager.sync(change);
+				this.syncService.sync(change);
 			}.bind(this))
 		}
 	});
@@ -107,7 +107,7 @@ function CmsxManager() {
 				change.content = '<article xmlns="http://www.w3.org/1999/xhtml">' + content + '</article>';
 				change.contentType = 'text/html';
 				delete change.editable;
-				this.syncManager.sync(change);
+				this.syncService.sync(change);
 			}.bind(this))
 		}
 	});
@@ -117,107 +117,19 @@ function CmsxManager() {
 	var content1 = document.createElement('div');
 	var pageBrowserButton = new toolbar.CmsxToolbarContent('pages', content1, function(element) {
 		if (element.childNodes.length === 0) {
-			var pageID = this.currentPageID();
-			console.log('Page ID: ' + pageID);
-			ReactDOM.render(PageBrowser({
-				pageID: pageID,
-				loader: this.service.loadPage,
-				onPageOptions: this.showPageContextMenu
-			}), element);
+			this.pageManager.createPageTreeView(element).load();
 		}
 	}.bind(this, content1));
 
 	var content2 = document.createElement('div');
 	var resourceBrowserButton = new toolbar.CmsxToolbarContent('resources', content2, function(element) {
 		if (element.childNodes.length === 0) {
-			var WebDavBrowser = React.createFactory(require('./cmsx-webdav-browser.jsx'));
-			ReactDOM.render(WebDavBrowser({
-				rootURL: "/webdav",
-				client: new WebDavClient('admin', 'admin')
-			}), element);
+			this.resourceManager.createResourceTreeView(element).load();
 		}
-	}.bind(undefined, content2));
+	}.bind(this, content2));
 	new toolbar.CmsxToolbar([pageBrowserButton, resourceBrowserButton]);
 }
 
 var manager = CmsxManager.prototype;
-
-manager.currentPageID = function() {
-	var id = window.location.href.match(/([^\/]+)\/index.html(\?|#|$)/)[1];
-	return id === 'p' ? '' : id;
-};
-
-manager.showPageContextMenu = function(page, evt) {
-	if (!this._pageContextMenu) {
-		this._pageContextMenu = new ContextMenu([
-     		{
-    			label: 'edit',
-    			callback: this.showPageEditDialog
-    		},
-    		{
-    			label: 'delete',
-    			callback: this.deletePage
-    		},
-    		{
-    			label: 'add',
-    			callback: this.showPageCreateDialog
-    		},
-    		{
-    			label: 'pick',
-    			callback: this.pickPage
-    		}
-    	]);
-	}
-
-	this._pageContextMenu.show(evt, page);
-};
-
-manager.showPageEditDialog = function(page) {
-	if (!this._pagePreferencesForm) {
-		this._pagePreferencesForm = new form.CmsxForm()
-			.addInput('id', 'ID')
-			.addInput('title', 'Title')
-			.addInput('renderer', 'Renderer')
-			.addPickableInput('src', 'Content', 'text', this.pickResource)
-			.addInput('stylesheet', 'XSLT stylesheet')
-			.addButton('save', this.savePage);
-		this._pagePreferencesDialog = createDialog();
-		this._pagePreferencesForm.mountAt(this._pagePreferencesDialog.getElements().content);
-	}
-
-	this._pagePreferencesForm.set(page);
-	this._pagePreferencesDialog.show();
-};
-
-manager.savePage = function(page) {
-	console.log(page);
-	//this.service.savePage(page);
-};
-
-manager.showPageCreateDialog = function(parentPage) {
-	this.showPageEditDialog({parent: parentPage.id}); // TODO: handle parent
-};
-
-manager.deletePage = function(page) {
-	console.log('TODO: delete page');
-	//this.service.deletePage(page.id);
-};
-
-manager.pickPage = function(setter) {
-	if (!this._pagePicker) {
-		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 500});
-		this._pagePicker = ReactDOM.render(PageBrowser({
-			loader: this.service.loadPage,
-			onPageOptions: this.showPageContextMenu
-		}), this._pagePickerDialog.getElements().content);
-	}
-
-	this._pagePicker.show(this.currentPageID());
-	this._pagePickerDialog.show();
-};
-
-manager.pickResource = function(setter) {
-	console.log('TODO: resource picker');
-};
 
 module.exports = CmsxManager;

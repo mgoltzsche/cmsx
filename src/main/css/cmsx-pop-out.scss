@@ -1,0 +1,56 @@
+.cmsx-pop-out {
+	position: fixed;
+	z-index: 999;
+	background: $backgroundColor;
+	border: 1px solid $borderColor;
+	@include border-radius($margin);
+	@include box-shadow(1px 2px 5px rgba(0,0,0,.5));
+
+	&.cmsx-pop-out-top-left {
+		@include border-radius($margin $margin 0 $margin);
+	}
+
+	&.cmsx-pop-out-top-right {
+		@include border-radius($margin $margin $margin 0);
+	}
+
+	&.cmsx-pop-out-bottom-left {
+		@include border-radius($margin 0 $margin $margin);
+	}
+
+	&.cmsx-pop-out-bottom-right {
+		@include border-radius(0 $margin $margin $margin);
+	}
+}
+
+.cmsx-context-menu {
+	padding: $margin 0;
+
+	.cmsx-list-container {
+		.cmsx-list, .cmsx-list-item {
+			border: none;
+		}
+	
+		.cmsx-list-item {
+			margin: 0;
+			padding: 0;
+			display: block;
+	
+			.cmsx-item-label {
+				&, &:visited, &:hover, &:active, &:focus {
+					display: block;
+					margin: 0;
+					padding: $margin/2 $margin;
+					color: $actionColor;
+					text-decoration: none;
+					width: auto;
+				}
+	
+				&:hover, &:active, &:focus {
+					background: $actionColor;
+					color: $backgroundColor;
+				}
+			}
+		}
+	}
+}

@@ -1,10 +1,11 @@
 .cmsx-tree {
+	height: 100%;
 
-	ul.cmsx-tree-parents {
+	.cmsx-tree-ancestors .cmsx-list {
 		border-bottom: none;
 		padding-left: $margin;
 
-		li.cmsx-list-item {
+		.cmsx-list-item {
 			display: inline-block;
 			padding: $margin/2 $margin/2 $margin/2 0;
 			border-bottom: none;
@@ -29,5 +30,12 @@
 				display: inline;
 			}
 		}
+	}
+
+	.cmsx-tree-children .cmsx-list {
+		overflow: auto;
+		overflow-y: auto;
+		overflow-x: hidden;
+		height: 100%; /* TODO: -breadcrumb pixels */
 	}
 }

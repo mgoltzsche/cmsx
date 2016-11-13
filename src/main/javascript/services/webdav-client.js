@@ -1,4 +1,4 @@
-var createLogger = require('./logger.js');
+var createLogger = require('../logger.js');
 var log = createLogger('WebDavClient');
 var $ = require('jquery');
 var ABSOLUTE_URL_PATTERN = /^[^:\/]+:\/\/.+/;

@@ -1,4 +1,4 @@
-var utils = require('./cmsx-utils.js');
+var utils = require('../cmsx-utils.js');
 
 function CmsxInput(id, label, type) {
 	this._createElements(id, label, type);
@@ -67,10 +67,11 @@ var pickableInput = utils.extend(CmsxPickableInput.prototype, input);
 
 pickableInput._handlePickClick = function(onPick, evt) {
 	evt.preventDefault();
-	onPick(this.setValue);
+	onPick(this.setValue, this._value || '');
 };
 
 pickableInput.setValue = function(value) {
+	this._value = value;
 	this._input.value = value || '';
 };
 

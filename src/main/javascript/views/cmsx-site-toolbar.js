@@ -28,7 +28,7 @@ function CmsxToolbar(buttons) {
 	this._element = document.createElement('div');
 	this._buttonsElement = document.createElement('div');
 	this._contentsElement = document.createElement('div');
-	this._element.className = 'cmsx-toolbar';
+	this._element.className = 'cmsx-site-toolbar';
 	this._buttonsElement.className = 'cmsx-toolbar-buttons';
 	this._contentsElement.className = 'cmsx-toolbar-contents';
 	var btnHandler = function(button, evt) {
@@ -91,7 +91,7 @@ Toolbar.showProgress = function(value) {
 };
 
 Toolbar.update = function() {
-	this._element.className = 'cmsx-toolbar ' +
+	this._element.className = 'cmsx-site-toolbar ' +
 		(this._showContent ? ' cmsx-toolbar-show-content' : '') +
 		(this._showButtons ? ' cmsx-toolbar-show-buttons' : '');
 };

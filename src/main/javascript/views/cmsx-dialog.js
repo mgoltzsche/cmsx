@@ -1,5 +1,5 @@
-var log = require('./logger.js')('CmsxDialog');
-var utils = require('./cmsx-utils.js');
+var log = require('../logger.js')('CmsxDialog');
+var utils = require('../cmsx-utils.js');
 
 function ModalOverlay(onClick) {
 	this._onClick = onClick;
@@ -83,7 +83,7 @@ DialogStack.prototype._handleModalOverlayClick = function() {
 DialogStack.prototype._updateZIndex = function() {
 	var zIndex = 990;
 	for (var i = this._dialogs.length - 1; i >= 0; i--) {
-		this._dialogs[i].getElements().container.style.zIndex = zIndex;
+		this._dialogs[i]._elements.container.style.zIndex = zIndex;
 		zIndex -= 5;
 	}
 };
@@ -114,21 +114,15 @@ function CmsxDialog(dialogStack, prefs) {
 	var els = this._elements = {
 		container: document.createElement('div'),
 		close: document.createElement('a'),
-		header: document.createElement('div'),
-		content: document.createElement('div'),
-		footer: document.createElement('div')
+		content: document.createElement('div')
 	};
 
 	this._updateClassName();
-	els.header.className = 'cmsx-dialog-header';
 	els.content.className = 'cmsx-dialog-content';
-	els.footer.className = 'cmsx-dialog-footer';
 	els.close.className = 'cmsx-dialog-close';
 	els.close.addEventListener('click', this._handleClose);
-	els.header.appendChild(els.close);
-	els.container.appendChild(els.header);
+	els.container.appendChild(els.close);
 	els.container.appendChild(els.content);
-	els.container.appendChild(els.footer);
 	document.body.appendChild(els.container);
 
 	this._deriveOffset();
@@ -193,8 +187,8 @@ dialog.setActive = function(active) {
 	this._updateClassName();
 };
 
-dialog.getElements = function() {
-	return this._elements;
+dialog.contentElement = function() {
+	return this._elements.content;
 };
 
 dialog.getMaxContentWidth = function() {

@@ -1,5 +1,5 @@
 var $ = require('jquery');
-var utils = require('./cmsx-utils.js');
+var utils = require('../cmsx-utils.js');
 
 function CmsxService(rootURI) {
 	if (rootURI === undefined || rootURI === null) {throw 'Undefined CmsxService rootURI';}
