@@ -14,11 +14,17 @@ function CmsxResourceManager(webdavClient, rootURL) {
 var manager = CmsxResourceManager.prototype;
 
 manager.createResourceTreeView = function(parentElement) {
-	var resourceTreeView = new TreeView(parentElement, {
-		onItemClick: this._handleResourceItemClick,
-		onItemOptions: this._handleResourceOptions,
-		checkable: true
-	});
+	var resourceTreeView = new TreeView(parentElement, new TreeView.Features()
+	.itemClickable(this._handleResourceItemClick)
+	.itemOptions(this._handleResourceOptions)
+	.itemCheckable()
+	.toolbarButton('delete', 'cmsx-contextual', function(evt, listView) {
+		console.log('delete selected resources');
+		console.log(listView.checked());
+	})
+	.toolbarButton('add', null, function(evt, listView) {
+		console.log('add resource');
+	}));
 	resourceTreeView.load = this._loadCollection.bind(this, resourceTreeView);
 	return resourceTreeView;
 };

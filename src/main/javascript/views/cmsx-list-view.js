@@ -1,5 +1,8 @@
+var utils = require('../cmsx-utils.js');
 
-function ListView(parentElement, items, decorators) {
+function ListView(parentElement, toolbarSupported, features, items) {
+	this.toolbarSupported = !!toolbarSupported;
+	this.context = this;
 	this._element = document.createElement('div');
 	this._element.className = 'cmsx-list-container';
 	this._listElement = document.createElement('ul');
@@ -7,12 +10,9 @@ function ListView(parentElement, items, decorators) {
 	this._element.appendChild(this._listElement);
 	this._itemViews = [];
 	this._itemRenderer = new ListItemRenderer();
-	this._decoratorDestroyers = [];
-	var deco = decorators && Object.prototype.toString.call(decorators) === Object.prototype.toString.call([]) ? decorators : Array.prototype.slice.call(arguments, 2);
-
-	for (var i = 0; i < deco.length; i++) { // apply decorators
-		deco[i](this);
-	}
+	this.destroy = this.destroy.bind(this);
+	this.setItems = this.setItems.bind(this);
+	features.apply(this);
 
 	this.setItems(items);
 	this._element.appendChild(this._listElement);
@@ -24,10 +24,7 @@ var list = ListView.prototype;
 list.destroy = function() {
 	this._element.parentElement.removeChild(this._element);
 	this.setItems([]);
-	for (var i = 0; i < this._decoratorDestroyers.length; i++) {
-		this._decoratorDestroyers[i]();
-	}
-	this._element = this._listElement = this._itemRenderer = this._itemViews = this._items = this._decoratorDestroyers = null;
+	this._element = this._listElement = this._itemRenderer = this._itemViews = this._items = null;
 };
 
 list.setItems = function(items) {
@@ -67,6 +64,7 @@ list.toolbar = function() {
 	if (!this._toolbar) {
 		this._toolbar = document.createElement('div');
 		this._toolbar.className = 'cmsx-toolbar';
+		this._element.className += ' cmsx-list-with-toolbar';
 		this._element.prepend(this._toolbar);
 	}
 	return this._toolbar;
@@ -122,7 +120,8 @@ linkDecorator._handleItemClick = function(evt) {
 	var el = evt.target || evt.srcElement,
 		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item;
 	evt.preventDefault();
-	this._onItemClick(item, evt, this._listView);
+	this._listView.clickedItem = item;
+	this._onItemClick(item, evt, this._listView.context);
 };
 
 
@@ -158,7 +157,7 @@ optionsDecorator._handleItemButtonClick = function(evt) {
 	var el = evt.target || evt.srcElement,
 		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item;
 	evt.preventDefault();
-	this._onItemButtonClick(item, evt, this._listView);
+	this._onItemButtonClick(item, evt, this._listView.context);
 };
 
 
@@ -170,23 +169,24 @@ function ListItemCheckboxRenderer(delegate, listView) {
 	this._handleAllItemsChange = this._handleAllItemsChange.bind(this);
 	this.checked = this.checked.bind(this);
 	listView.checked = this.checked;
+	listView._element.className += ' cmsx-list-container-checkable';
 	listView._allCheckbox = document.createElement('input');
 	listView._allCheckbox.type = 'checkbox';
 	listView.toolbar().prepend(listView._allCheckbox);
 	listView._allCheckbox.addEventListener('change', this._handleAllItemsChange);
-	listView._decoratorDestroyers.push(this.destroy.bind(this));
+	listView.destroy = function(listDestroy) {
+		this.destroy();
+		this._listView._allCheckbox.removeEventListener('change', this._handleAllItemsChange);
+		this._listView._allCheckbox = null;
+	}.bind(this, listView.destroy);
 	listView.setItems = function(setItems, items) {
 		this._checkedCount = 0;
 		setItems(items);
-		this._listView._allCheckbox.checked = items.length > 0 && this._checkedCount === items.length;
-	}.bind(this, listView.setItems.bind(listView));
+		this._update();
+	}.bind(this, listView.setItems);
 }
 
 var checkboxDecorator = ListItemCheckboxRenderer.prototype;
-
-checkboxDecorator.destroy = function() {
-	this._listView._allCheckbox.removeEventListener('change', this._handleAllItemsChange);
-};
 
 checkboxDecorator.createItem = function(itemView) {
 	this._delegate.createItem(itemView);
@@ -211,25 +211,34 @@ checkboxDecorator.destroyItem = function(itemView) {
 };
 
 checkboxDecorator.checked = function() {
-	var i, item, checked = [], items = this._listView._items;
-	for (i = 0; i < items.length; i++) {
-		item = items[i];
-		if (item.checked) {
-			checked.push(item);
+	if (arguments.length === 0) {
+		var i, item, checked = [], items = this._listView._items;
+		for (i = 0; i < items.length; i++) {
+			item = items[i];
+			if (item.checked) {
+				checked.push(item);
+			}
 		}
+		return checked;
+	} else {
+		this.checkAll(arguments[0]);
 	}
-	return checked;
 };
 
 checkboxDecorator.checkAll = function(checked) {
+	if (checked && this._checkedCount === this._listView._items.length ||
+			!checked && this._checkedCount === 0) {
+		return; // Already all (un)checked
+	}
+
 	var i, itemView, itemViews = this._listView._itemViews;
 	for (i = 0; i < itemViews.length; i++) {
 		itemView = itemViews[i];
-		itemView.checkbox.checked = checked;
 		itemView.item.checked = checked;
+		itemView.checkbox.checked = checked;
 	}
-	this._listView._allCheckbox.checked = checked;
 	this._checkedCount = checked ? itemViews.length : 0;
+	this._update();
 };
 
 checkboxDecorator._handleAllItemsChange = function(evt) {
@@ -241,56 +250,91 @@ checkboxDecorator._handleAllItemsChange = function(evt) {
 checkboxDecorator._handleItemChange = function(evt) {
 	evt = evt || window.event;
 	var el = evt.target || evt.srcElement,
-		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item;
+		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item,
+		checked = el.checked;
 	evt.preventDefault();
-	item.checked = el.checked;
-	this._checkedCount += item.checked ? 1 : -1;
+	if (checked == item.checked) return;
+	item.checked = checked;
+	this._checkedCount += checked ? 1 : -1;
+	this._update();
+};
+
+checkboxDecorator._update = function() {
+	var items = this._listView._items;
 	this._listView.toolbar().className = 'cmsx-toolbar ' + (this._checkedCount > 0 ? 'cmsx-list-checked' : 'cmsx-list-unchecked');
-	this._listView._allCheckbox.checked = this._checkedCount === this._listView._items.length;
+	this._listView._allCheckbox.checked = items.length > 0 && this._checkedCount === items.length;
+	this._listView._allCheckbox.disabled = items.length === 0;
 };
 
 
-ListView.className = function(className) {
-	return function(listView) {
+function ListFeatures(apply) {
+	if (apply) this.apply = apply;
+}
+
+ListFeatures.prototype.apply = function(itemView) {};
+
+ListFeatures.prototype.className = function(className) {
+	return new ListFeatures(function(apply, listView) {
 		listView._element.className += ' ' + className;
-	};
+		apply(listView);
+	}.bind(undefined, this.apply));
 };
 
-ListView.itemClickable = function(onClick) {
-	return function(listView) {
+ListFeatures.prototype.itemClickable = function(onClick) {
+	return new ListFeatures(function(apply, listView) {
 		listView._itemRenderer = new ListItemLinkRenderer(listView._itemRenderer, listView, onClick);
-	};
+		apply(listView);
+	}.bind(undefined, this.apply));
 };
 
-ListView.itemOptions = function(onClick) {
-	return function(listView) {
+ListFeatures.prototype.itemOptions = function(onClick) {
+	return new ListFeatures(function(apply, listView) {
 		listView._itemRenderer = new ListItemOptionsRenderer(listView._itemRenderer, listView, onClick);
-	};
+		apply(listView);
+	}.bind(undefined, this.apply));
 };
 
-ListView.toolbarButton = function(label, callback) {
-	return function(listView) {
-		var clickHandler = function(evt) {
+ListFeatures.prototype.itemCheckable = function() {
+	return new ListFeatures(function(apply, listView) {
+		if (listView.toolbarSupported) {
+			listView._itemRenderer = new ListItemCheckboxRenderer(listView._itemRenderer, listView);
+		}
+		apply(listView);
+	}.bind(undefined, this.apply));
+};
+
+ListFeatures.prototype.toolbarButton = function(label, className, callback) {
+	return new ListFeatures(function(apply, listView) {
+		if (!listView.toolbarSupported) {
+			apply(listView);
+			return;
+		}
+
+		listView.className += ' cmsx-list-container-with-toolbar';
+		var btn = document.createElement('a'),
+			clickHandler = function(evt) {
 				evt = evt || window.event;
 				evt.preventDefault();
-				callback(evt, listView);
-			}, destroy = function(handler) {
-				this.removeEventListener('click', handler);
-			},
-			btn = document.createElement('a'),
-			boundDestroy = destroy.bind(btn, clickHandler);
+				callback(evt, listView.context);
+			};
+
+		if (!listView._buttonBar) { // Create button bar
+			listView._buttonBar = document.createElement('div');
+			listView._buttonBar.className = 'cmsx-list-button-bar';
+			listView.toolbar().appendChild(listView._buttonBar);
+		}
+
 		btn.textContent = label;
-		btn.className = 'cmsx-button cmsx-toolbar-button';
+		btn.className = 'cmsx-button cmsx-toolbar-button' + (className ? ' ' + className : '');
 		btn.addEventListener('click', clickHandler);
-		listView.toolbar().appendChild(btn);
-		listView._decoratorDestroyers.push(boundDestroy);
-	};
+		listView._buttonBar.appendChild(btn);
+		listView.destroy = function(listDestroy, clickHandler) {
+			this.removeEventListener('click', clickHandler);
+			listDestroy();
+		}.bind(btn, listView.destroy, clickHandler);
+		apply(listView);
+	}.bind(undefined, this.apply));
 };
 
-ListView.itemCheckable = function() {
-	return function(listView) {
-		listView._itemRenderer = new ListItemCheckboxRenderer(listView._itemRenderer, listView);
-	};
-};
-
+ListView.Features = ListFeatures;
 module.exports = ListView;

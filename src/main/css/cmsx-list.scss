@@ -1,4 +1,21 @@
 .cmsx-list-container {
+	&.cmsx-list-with-toolbar {
+		.cmsx-list {
+			border-top: none;
+		}
+
+		.cmsx-list-button-bar {
+			display: inline-block;
+		}
+
+		.cmsx-list-unchecked .cmsx-toolbar-button.cmsx-contextual {
+			&, &:hover, &:active, &:visited, &:focus {
+				color: darken($buttonColor, $colorModPercent);
+				cursor: default;
+			}
+		}
+	}
+
 	.cmsx-list {
 		list-style-type: none;
 		margin: 0;

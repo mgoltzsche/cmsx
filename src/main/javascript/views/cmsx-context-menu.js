@@ -6,9 +6,8 @@ function ContextMenu(options) {
 	utils.bindAll(this);
 	this._popOut = new PopOut('cmsx-context-menu');
 	var el = this._popOut.contentElement(),
-		clickable = ListView.itemClickable(this._handleOptionClick);
-	this._listView = new ListView(el, options, clickable);
-	this.setOptions(options);
+		features = new ListView.Features().itemClickable(this._handleOptionClick);
+	this._listView = new ListView(el, false, features, options);
 }
 
 var menu = ContextMenu.prototype;

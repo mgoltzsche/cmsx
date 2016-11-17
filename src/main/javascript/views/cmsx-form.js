@@ -9,8 +9,8 @@ var input = CmsxInput.prototype;
 input._createElements = function(id, label, type) {
 	this.id = id;
 	var el = this._element = document.createElement('div'),
-		labelContainer = document.createElement('div'),
-		inputContainer = this._inputContainer = document.createElement('div');
+	labelContainer = document.createElement('div'),
+	inputContainer = this._inputContainer = document.createElement('div');
 	el.className = 'cmsx-input-container';
 	labelContainer.textContent = label;
 	labelContainer.className = 'cmsx-input-label';
@@ -27,7 +27,8 @@ input._createInputElement = function(id, label, type) {
 	this._inputContainer.appendChild(input);
 };
 
-input.mountAt = function(parentElement) {
+input.init = function(parentElement, form) {
+	this.form = form;
 	parentElement.appendChild(this._element);
 };
 
@@ -50,6 +51,17 @@ input.get = function(values) {
 
 	return values;
 };
+
+function CmsxInitialInput(id, label, type) {
+	this._createElements(id, label, type);
+}
+
+utils.decorate(CmsxInitialInput.prototype, input, {
+	set: function(delegate, values) {
+		delegate.call(this, values);
+		this._input.disabled = values[this.id] !== undefined;
+	}
+});
 
 
 function CmsxPickableInput(id, label, type, onPick) {
@@ -84,17 +96,17 @@ pickableInput.destroy = function() {
 };
 
 
-function CmsxFormButton(id, label, callback) {
+function CmsxFormButton(id, label, primary, callback) {
 	this._handleClick = this._handleClick.bind(this, callback);
 	var btn = this._element = document.createElement('a');
 	btn.textContent = label;
-	btn.className = 'cmsx-button';
+	btn.className = 'cmsx-button' + (primary ? ' cmsx-primary' : '');
 	btn.addEventListener('click', this._handleClick);
 }
 var button = utils.extend(CmsxFormButton.prototype, input);
 
 button._handleClick = function(callback, evt) {
-	callback(evt);
+	callback(this.form, evt);
 };
 button.destroy = function() {
 	if (this._element.parentElement) {
@@ -108,6 +120,7 @@ button.get = function(values) {return values;};
 
 function CmsxForm(onChange) {
 	this._inputs = {};
+	this._values = {};
 	this._element = document.createElement('form');
 	this._element.className = 'cmsx-form';
 	this._idCount = 0;
@@ -120,13 +133,18 @@ form.addInput = function(id, label, type) {
 	return this;
 };
 
+form.addInitialInput = function(id, label, type) {
+	this.add(new CmsxInitialInput(id, label, type));
+	return this;
+};
+
 form.addPickableInput = function(id, label, type, onPick) {
 	this.add(new CmsxPickableInput(id, label, type, onPick));
 	return this;
 };
 
-form.addButton = function(label, callback) {
-	this.add(new CmsxFormButton('btn' + (this._idCount++), label, callback));
+form.addButton = function(label, primary, callback) {
+	this.add(new CmsxFormButton('btn' + (this._idCount++), label, primary, callback));
 	return this;
 };
 
@@ -134,7 +152,7 @@ form.add = function(input) {
 	if (this._inputs[input.id])
 		throw 'Cannot add input with duplicate ID: ' + input.id;
 
-	input.mountAt(this._element);
+	input.init(this._element, this);
 	this._inputs[input.id] = input;
 	return this;
 };
@@ -146,7 +164,8 @@ form.remove = function(input) {
 	return this;
 };
 
-form.mountAt = function(parentElement) {
+form.init = function(parentElement, form) {
+	this.form = form || this;
 	parentElement.appendChild(this._element);
 };
 
@@ -166,6 +185,7 @@ form.destroy = function() {
 };
 
 form.set = function(values) {
+	this._values = values;
 	for (var k in this._inputs) {
 		if (this._inputs.hasOwnProperty(k)) {
 			this._inputs[k].set(values);
@@ -174,7 +194,7 @@ form.set = function(values) {
 };
 
 form.get = function(values) {
-	values = values || {};
+	values = values || this._values;
 	for (var k in this._inputs) {
 		if (this._inputs.hasOwnProperty(k)) {
 			this._inputs[k].get(values);

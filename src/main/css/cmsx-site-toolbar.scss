@@ -7,7 +7,7 @@
 	background: $backgroundColor;
 	@include transition(width 0.3s);
 
-	.cmsx-toolbar-buttons {
+	.cmsx-site-toolbar-buttons {
 		position: absolute;
 		top: 10%;
 		right: 0;
@@ -15,15 +15,15 @@
 		border-right: none;
 		@include border-radius($borderRadius 0 0 $borderRadius);
 		@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
-	}
 
-	.cmsx-toolbar-button {
-		display: block;
-		padding: $margin/2;
-		border-bottom: 1px solid $borderColor;
-
-		&:last-child {
-			border-bottom: none;
+		.cmsx-toolbar-button {
+			display: block;
+			padding: $margin/2;
+			border-bottom: 1px solid $borderColor;
+	
+			&:last-child {
+				border-bottom: none;
+			}
 		}
 	}
 
@@ -34,31 +34,29 @@
 		height: 100%;
 		@include box-shadow(3px 3px 13px rgba(0,0,0,.7));
 
-		.cmsx-toolbar-buttons {
+		.cmsx-site-toolbar-buttons {
 			@include box-shadow(none);
-		}
 
-		.cmsx-toolbar-button {
-			&, &:last-child {
-				border-left: 1px solid $borderColor;
-				border-bottom: 1px solid $borderColor;
-			}
-
-			&:first-child {
-				border-top: 1px solid $borderColor;
-			}
-
-			&.cmsx-toolbar-button-active {
-				border-left: 1px solid $actionColor;
+			.cmsx-toolbar-button {
+				&, &:last-child {
+					border-left: 1px solid $borderColor;
+					border-bottom: 1px solid $borderColor;
+				}
+	
+				&:first-child {
+					border-top: 1px solid $borderColor;
+				}
+	
+				&.cmsx-toolbar-button-active {
+					border-left: 1px solid $actionColor;
+				}
 			}
 		}
 	}
 
-	.cmsx-toolbar-contents {
+	.cmsx-site-toolbar-contents {
 		margin: $margin 30px $margin $margin;
-	}
 
-	.cmsx-toolbar-contents {
 		.cmsx-toolbar-content {
 			display: none;
 

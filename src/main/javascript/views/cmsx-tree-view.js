@@ -1,35 +1,20 @@
 var ListView = require('./cmsx-list-view.js');
 
-function TreeView(parentElement, prefs) {
-	var ancestorDecorators = [], childrenDecorators = [];
-
-	ancestorDecorators.push(ListView.className('cmsx-tree-ancestors'));
-	childrenDecorators.push(ListView.className('cmsx-tree-children'));
-
-	if (prefs.checkable) {
-		childrenDecorators.push(ListView.itemCheckable());
-		childrenDecorators.push(ListView.toolbarButton('test', function(evt, listView) {
-			console.log('list toolbar button clicked');
-			console.log(listView.checked());
-		}));
-	}
-
-	if (prefs.onItemClick) {
-		var clickable = ListView.itemClickable(this._handleItemClick.bind(this, prefs.onItemClick));
-		ancestorDecorators.push(clickable);
-		childrenDecorators.push(clickable);
-	}
-
-	if (prefs.onItemOptions) {
-		var options = ListView.itemOptions(this._handleItemOptions.bind(this, prefs.onItemOptions));
-		ancestorDecorators.push(options);
-		childrenDecorators.push(options);
-	}
+function TreeView(parentElement, features) {
+	var ancestorFeatures = function() {
+		new ListView.Features().className('cmsx-tree-ancestors').apply(this);
+		features.apply(this);
+	},
+	childrenFeatures = function() {
+		new ListView.Features().className('cmsx-tree-children').apply(this);
+		features.apply(this);
+	};
 
 	this._element = document.createElement('div');
 	this._element.className = 'cmsx-tree';
-	this._ancestors = new ListView(this._element, [], ancestorDecorators);
-	this._children = new ListView(this._element, [], childrenDecorators);
+	this._ancestors = new ListView(this._element, false, ancestorFeatures);
+	this._children = new ListView(this._element, true, childrenFeatures);
+	this._ancestors.context = this._children.context = this;
 	parentElement.appendChild(this._element);
 }
 
@@ -59,4 +44,5 @@ TreeView.prototype._handleItemOptions = function(onItemOptions, item, evt) {
 	onItemOptions(item, evt, this);
 };
 
+TreeView.Features = ListView.Features;
 module.exports = TreeView;

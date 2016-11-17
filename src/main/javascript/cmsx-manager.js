@@ -2,6 +2,7 @@ var utils = require('./cmsx-utils.js');
 var MediumEditor = require('medium-editor');
 var saveExt = require('./cmsx-editor-save-extension.js');
 var CmsxService = require('./services/cmsx-service.js');
+var CmsxPageService = require('./services/cmsx-page-service.js');
 var WebDavClient = require('./services/webdav-client.js');
 var toolbar = require('./views/cmsx-site-toolbar.js');
 var ContextMenu = require('./views/cmsx-context-menu.js');
@@ -56,15 +57,18 @@ sm.sync = function(change) {
 function CmsxManager() {
 	utils.bindAll(this);
 
-	this.service = new CmsxService('');
-	this.resourceManager = new CmsxResourceManager(new WebDavClient('admin', 'admin'), '/webdav');
-	this.pageManager = new CmsxPageManager(this.service, this.resourceManager.pickResource);
-	this.syncService = new ContentSyncManager(function(changes) {
+	var rootURL = '',
+		pageService = new CmsxPageService(rootURL),
+		contentService = new CmsxService(rootURL),
+		webdav = new WebDavClient('admin', 'admin');
+	this.resourceManager = new CmsxResourceManager(webdav, '/webdav');
+	this.pageManager = new CmsxPageManager(pageService, this.resourceManager.pickResource);
+	this.syncService = new ContentSyncManager(function(contentService, changes) {
 		for (var i = 0; i < changes.length; i++) {
 			var c = changes[i];
-			this.service.updateDocument(c.doc, c.xpath, c.content, c.contentType + '; charset=utf-8');
+			contentService.updateDocument(c.doc, c.xpath, c.content, c.contentType + '; charset=utf-8');
 		}
-	}.bind(this));
+	}.bind(this, contentService));
 
 	// Setup content editors
 	new MediumEditor('.cmsx-edit', {

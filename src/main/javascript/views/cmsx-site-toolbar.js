@@ -29,8 +29,8 @@ function CmsxToolbar(buttons) {
 	this._buttonsElement = document.createElement('div');
 	this._contentsElement = document.createElement('div');
 	this._element.className = 'cmsx-site-toolbar';
-	this._buttonsElement.className = 'cmsx-toolbar-buttons';
-	this._contentsElement.className = 'cmsx-toolbar-contents';
+	this._buttonsElement.className = 'cmsx-site-toolbar-buttons';
+	this._contentsElement.className = 'cmsx-site-toolbar-contents';
 	var btnHandler = function(button, evt) {
 		button.onClick(evt);
 

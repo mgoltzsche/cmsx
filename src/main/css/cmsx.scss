@@ -1,26 +1,26 @@
+$colorModPercent: 10%;
 $backgroundColor: #ffffff;
 $backgroundColorHighlight: #f5f5f5;
-$borderColorLight: #eeeeee;
-$borderColor: #dddddd;
 $textColor: #333333;
+$borderColor: darken($backgroundColor, $colorModPercent);
+$borderColorLight: lighten($borderColor, $colorModPercent);
+$buttonColor: $borderColor;
 $actionColor: #3377cc;
 $margin: 10px;
-$colorModPercent: 20%;
 $borderRadius: 3px;
 $animationLength: 0.3s;
 
 @import "medium-editor.scss";
+@import "_icons.generated.scss";
 @import "mixins.scss";
 @import "cmsx-buttons.scss";
-@import "_icons.generated.scss";
 @import "cmsx-pop-out.scss";
 @import "cmsx-dialog.scss";
-@import "cmsx-site-toolbar.scss";
 @import "cmsx-list.scss";
 @import "cmsx-tree.scss";
 @import "cmsx-form.scss";
-@import "cmsx-webdav-browser.scss";
 @import "cmsx-media.scss";
+@import "cmsx-site-toolbar.scss";
 
 html {
     height: 100%;

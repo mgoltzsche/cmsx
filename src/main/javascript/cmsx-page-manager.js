@@ -21,11 +21,17 @@ manager.currentPageID = function() {
 };
 
 manager.createPageTreeView = function(parentElement) {
-	var pageTreeView = new TreeView(parentElement, {
-		onItemClick: this._handlePageItemClick,
-		onItemOptions: this._handlePageOptions,
-		checkable: true
-	});
+	var pageTreeView = new TreeView(parentElement, new TreeView.Features()
+		.itemClickable(this._handlePageItemClick)
+		.itemOptions(this._handlePageOptions)
+		.itemCheckable()
+		.toolbarButton('delete', 'cmsx-contextual', function(evt, listView) {
+			console.log('delete selected pages');
+			console.log(listView.checked());
+		})
+		.toolbarButton('add', null, function(evt, listView) {
+			console.log('add page');
+		}));
 	pageTreeView.load = this._loadPageTree.bind(this, pageTreeView);
 	return pageTreeView;
 };
@@ -34,10 +40,6 @@ manager._loadPageTree = function(treeView, pageID) {
 	if (typeof pageID !== 'string') pageID = this.currentPageID();
 	this.pageService.loadPage(pageID, this._handlePagesLoaded.bind(this, treeView));
 	return treeView;
-};
-
-manager._handlePageItemClick = function(item, evt, treeView) {
-	this._loadPageTree(treeView, item.id);
 };
 
 manager._handlePagesLoaded = function(treeView, page) {
@@ -52,6 +54,10 @@ manager._toPageViewModel = function(page) {
 		label: page.title || page.id,
 		page: page
 	};
+};
+
+manager._handlePageItemClick = function(item, evt, treeView) {
+	this._loadPageTree(treeView, item.id);
 };
 
 manager._handlePageOptions = function(item, evt) {
@@ -81,24 +87,37 @@ manager._handlePageOptions = function(item, evt) {
 
 manager.showPageEditDialog = function(page) {
 	if (!this._pagePreferencesForm) {
+		this._pagePreferencesDialog = createDialog();
 		this._pagePreferencesForm = new form.CmsxForm()
-			.addInput('id', 'ID')
+			.addInitialInput('id', 'ID')
 			.addInput('title', 'Title')
 			.addInput('renderer', 'Renderer')
 			.addPickableInput('src', 'Content', 'text', this.resourcePicker)
 			.addInput('stylesheet', 'XSLT stylesheet')
-			.addButton('save', this.savePage);
-		this._pagePreferencesDialog = createDialog();
-		this._pagePreferencesForm.mountAt(this._pagePreferencesDialog.contentElement());
+			.addButton('save', true, this.savePage);
+		this._pagePreferencesForm.dialog = this._pagePreferencesDialog;
+		this._pagePreferencesForm.init(this._pagePreferencesDialog.contentElement());
 	}
 
-	this._pagePreferencesForm.set(page);
+	this._pagePreferencesForm.set(this._toPageProps(page));
 	this._pagePreferencesDialog.show();
 };
 
-manager.savePage = function(page) {
-	console.log(page);
-	//this.service.savePage(page);
+manager.savePage = function(form, evt) {
+	console.log(form.get());
+	this.pageService.updatePage(form.get(), function() {
+		form.dialog.hide();
+	});
+};
+
+manager._toPageProps = function(page) {
+	var props = {};
+	for (var k in page) {
+		if (page.hasOwnProperty(k) && typeof page[k] === 'string') {
+			props[k] = page[k];
+		}
+	}
+	return props;
 };
 
 manager.showPageCreateDialog = function(parentPage) {
@@ -107,7 +126,7 @@ manager.showPageCreateDialog = function(parentPage) {
 
 manager.deletePage = function(page) {
 	console.log('TODO: delete page');
-	//this.service.deletePage(page.id);
+	//this.pageService.deletePage(page.id);
 };
 
 manager.pickPage = function(setter, currentValue) {

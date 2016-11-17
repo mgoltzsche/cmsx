@@ -33,20 +33,58 @@ div.cmsx-buttons {
 	}
 }
 
-a.cmsx-button, a.cmsx-button:hover, a.cmsx-button:active {
+.cmsx-button, .cmsx-button:hover, .cmsx-button:active, .cmsx-button:visited, .cmsx-button:focus {
 	display: inline-block;
 	padding: $margin/2;
+	margin: 0 0 0 $margin/2;
 	@include border-radius($borderRadius);
-	background: $actionColor;
-	color: $backgroundColor;
+	background: $buttonColor;
+	color: $actionColor;
 	line-height: 1em;
 	cursor: pointer;
 	text-decoration: none;
+
+	&:first-child {
+		margin-left: 0;
+	}
+
+	&.cmsx-primary {
+		background: $actionColor;
+		color: $backgroundColor;
+	}
+
+	&.cmsx-disabled {
+		background: $buttonColor;
+		color: $textColor;
+	}
 
 	.cmsx-button-label {
 	}
 }
 
-/* not yet used: a.cmsx-button.cmsx-active, a.cmsx-button:active {
+.cmsx-toolbar {
+	background: $buttonColor;
+	border: 1px solid darken($buttonColor, $colorModPercent);
+
+	.cmsx-button {
+		margin-top: $margin/2;
+		margin-bottom: $margin/2;
+		background: transparent;
+		border: 1px solid transparent;
+		border: 1px solid darken($buttonColor, $colorModPercent);
+
+		&.cmsx-primary {
+			border: 1px solid $actionColor;
+		}
+
+		&.cmsx-disabled {
+			border: 1px solid darken($buttonColor, $colorModPercent);
+			color: darken($buttonColor, $colorModPercent);
+			cursor: default;
+		}
+	}
+}
+
+/* not yet used: .cmsx-button.cmsx-button-active, .cmsx-button:active {
 	@include box-shadow(0 0 0 1px rgba(0, 0, 0, 0.15) inset, 0 0 6px rgba(0, 0, 0, 0.2) inset);
 }*/
