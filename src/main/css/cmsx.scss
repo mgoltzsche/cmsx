@@ -6,6 +6,7 @@ $borderColor: darken($backgroundColor, $colorModPercent);
 $borderColorLight: lighten($borderColor, $colorModPercent);
 $buttonColor: $borderColor;
 $actionColor: #3377cc;
+$cancelColor: #aa0000;
 $margin: 10px;
 $borderRadius: 3px;
 $animationLength: 0.3s;

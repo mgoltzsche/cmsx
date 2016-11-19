@@ -14,7 +14,10 @@ var boundFunction = function(fn, thisObj, boundArgs) {
 			if (!err._cmsxReported) {
 				err._cmsxReported = true;
 				var stack = err.stack ? '\n' + err.stack : '';
-				console.log('ERROR: ' + err + stack);
+
+				if (console && console.log) {
+					console.log('ERROR: ' + err + stack);
+				}
 			}
 			throw err;
 		}
@@ -25,6 +28,27 @@ Function.prototype.bind = function(thisObj) {
 	var boundArgs = Array.prototype.slice.call(arguments, 1);
 	return boundFunction(this, thisObj, boundArgs);
 };
+
+
+if (!Array.prototype.map) {
+	Array.prototype.map = function(callback, thisArg) {
+		var result = [];
+		for (var i = 0; i < this.length; i++) {
+			result.push(callback.call(thisArg, this[i], i, this));
+		}
+		return result;
+	};
+}
+
+if (!Array.prototype.reduce) {
+	Array.prototype.reduce = function(callback, initialValue) {
+		for (var i = 0; i < this.length; i++) {
+			initialValue = callback(initialValue, this[i], i, this);
+		}
+		return initialValue;
+	};
+}
+
 
 utils.bindAll = function(obj) {
 	var k, entry;

@@ -1,36 +1,6 @@
 div.cmsx-buttons {
-	display: inline-block;
-	float: right;
-
-	& > ul {
-		display: block;
-		position: absolute;
-		list-style-type: none;
-		margin: 0;
-		padding: 0;
-		background: $actionColor;
-		@include border-radius($borderRadius);
-	}
-
-	&.cmsx-collapsed > ul {
-		display: none;
-	}
-
-	& > li {
-		display: inline-block;
-		margin: 0 0 0 $margin/2;
-		padding: 0;
-
-		&:first-child {
-			margin: 0;
-		}
-	}
-
-	&:before {
-		display: inline-block;
-		content: '#';
-		cursor: pointer;
-	}
+	text-align: center;
+	margin: $margin 0 0 0;
 }
 
 .cmsx-button, .cmsx-button:hover, .cmsx-button:active, .cmsx-button:visited, .cmsx-button:focus {
@@ -50,6 +20,11 @@ div.cmsx-buttons {
 
 	&.cmsx-primary {
 		background: $actionColor;
+		color: $backgroundColor;
+	}
+
+	&.cmsx-button-cancel {
+		background: $cancelColor;
 		color: $backgroundColor;
 	}
 

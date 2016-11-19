@@ -1,5 +1,3 @@
-var utils = require('../cmsx-utils.js');
-
 function ListView(parentElement, toolbarSupported, features, items) {
 	this.toolbarSupported = !!toolbarSupported;
 	this.context = this;
@@ -67,6 +65,7 @@ list.toolbar = function() {
 		this._element.className += ' cmsx-list-with-toolbar';
 		this._element.prepend(this._toolbar);
 	}
+
 	return this._toolbar;
 };
 
@@ -108,6 +107,7 @@ linkDecorator.createItem = function(itemView) {
 
 linkDecorator.updateItem = function(itemView) {
 	this._delegate.updateItem(itemView);
+	itemView.label.title = itemView.item.description || '';
 };
 
 linkDecorator.destroyItem = function(itemView) {
@@ -303,12 +303,11 @@ ListFeatures.prototype.itemCheckable = function() {
 	}.bind(undefined, this.apply));
 };
 
-ListFeatures.prototype.toolbarButton = function(label, className, callback) {
+ListFeatures.prototype.toolbarButton = function(label, callback, className) {
 	return new ListFeatures(function(apply, listView) {
-		if (!listView.toolbarSupported) {
-			apply(listView);
-			return;
-		}
+		apply(listView);
+
+		if (!listView.toolbarSupported) return;
 
 		listView.className += ' cmsx-list-container-with-toolbar';
 		var btn = document.createElement('a'),
@@ -332,7 +331,6 @@ ListFeatures.prototype.toolbarButton = function(label, className, callback) {
 			this.removeEventListener('click', clickHandler);
 			listDestroy();
 		}.bind(btn, listView.destroy, clickHandler);
-		apply(listView);
 	}.bind(undefined, this.apply));
 };
 

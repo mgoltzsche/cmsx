@@ -58,7 +58,9 @@ function WebDavClient(user, password) {
 	log.debug('Upload worker supported: ' + UploadWorkerManager.isSupported());
 }
 
-WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback) {
+var webdav = WebDavClient.prototype;
+
+webdav.propfind = function(path, depth, callback, errorCallback) {
 	this._request('PROPFIND', path, {
 		success: function(callback, xhr) {
 			callback(this._parsePropfindResult(xhr));
@@ -72,28 +74,28 @@ WebDavClient.prototype.propfind = function(path, depth, callback, errorCallback)
 	});
 };
 
-WebDavClient.prototype.mkcol = function(path, callback, errorCallback) {
+webdav.mkcol = function(path, callback, errorCallback) {
 	this._request('MKCOL', path, {
 		success: callback,
 		error: errorCallback
 	});
 };
 
-WebDavClient.prototype.get = function(path, callback, errorCallback) {
+webdav.get = function(path, callback, errorCallback) {
 	this._request('GET', path, {
 		success: callback,
 		error: errorCallback
 	});
 };
 
-WebDavClient.prototype.delete = function(path, callback, errorCallback) {
+webdav.delete = function(path, callback, errorCallback) {
 	this._request('DELETE', path, {
 		success: callback,
 		error: errorCallback
 	});
 };
 
-WebDavClient.prototype.move = function(path, destination, callback, errorCallback) {
+webdav.move = function(path, destination, callback, errorCallback) {
 	// See http://www.webdav.org/specs/rfc2518.html#rfc.section.8.9.2
 	// Required to move collection but fails with Bad request on collection move if locking supported.
 	// Lock on source and destination has to be acquired first.
@@ -108,7 +110,7 @@ WebDavClient.prototype.move = function(path, destination, callback, errorCallbac
 	});
 };
 
-WebDavClient.prototype.put = function(path, data, callback, errorCallback, progressCallback) {
+webdav.put = function(path, data, callback, errorCallback, progressCallback) {
 	var uploadInfo = {
 		url: resolveUrl(path),
 		data: data,
@@ -131,7 +133,7 @@ WebDavClient.prototype.put = function(path, data, callback, errorCallback, progr
 	return true;
 };
 
-WebDavClient.prototype._upload = function(upload) {
+webdav._upload = function(upload) {
 	if (UploadWorkerManager.isSupported()) {
 		this._putWithWorker(upload);
 	} else {
@@ -139,7 +141,7 @@ WebDavClient.prototype._upload = function(upload) {
 	}
 };
 
-WebDavClient.prototype._onUploadFinished = function(upload) {
+webdav._onUploadFinished = function(upload) {
 	delete this._pendingUploads[upload.url];
 
 	if (--this._pendingUploadCount === 0 && this._uploadWorker !== null) { // Last upload. Stop worker
@@ -150,7 +152,7 @@ WebDavClient.prototype._onUploadFinished = function(upload) {
 	}
 };
 
-WebDavClient.prototype._onUploadSuccess = function(upload, xhr) {
+webdav._onUploadSuccess = function(upload, xhr) {
 	try {
 		upload.onSuccess(xhr);
 	} catch(e) {
@@ -160,7 +162,7 @@ WebDavClient.prototype._onUploadSuccess = function(upload, xhr) {
 	this._onUploadFinished(upload);
 };
 
-WebDavClient.prototype._onUploadError = function(upload, xhr) {
+webdav._onUploadError = function(upload, xhr) {
 	try {
 		upload.onError(xhr.status);
 	} catch(e) {
@@ -170,7 +172,7 @@ WebDavClient.prototype._onUploadError = function(upload, xhr) {
 	this._onUploadFinished(upload);
 };
 
-WebDavClient.prototype._onUploadProgress = function(upload, loaded, total) {
+webdav._onUploadProgress = function(upload, loaded, total) {
 	try {
 		upload.onProgress(loaded, total);
 	} catch(e) {
@@ -178,11 +180,11 @@ WebDavClient.prototype._onUploadProgress = function(upload, loaded, total) {
 	}
 };
 
-WebDavClient.prototype._newUploadProgressListener = function(upload) {
+webdav._newUploadProgressListener = function(upload) {
 	return upload.onProgress ? this._onUploadProgress.bind(undefined, upload) : null;
 };
 
-WebDavClient.prototype._putWithWorker = function(upload) {
+webdav._putWithWorker = function(upload) {
 	if (this._uploadWorker === null)
 		this._uploadWorker = new UploadWorkerManager();
 
@@ -192,7 +194,7 @@ WebDavClient.prototype._putWithWorker = function(upload) {
 		this._newUploadProgressListener(upload));
 };
 
-WebDavClient.prototype._putFallback = function(upload) {
+webdav._putFallback = function(upload) {
 	var contentType = typeof update.data === 'string' ? 'text/plain' : update.data.type;
 
 	this._request('PUT', upload.url, {
@@ -206,11 +208,11 @@ WebDavClient.prototype._putFallback = function(upload) {
 	});
 };
 
-WebDavClient.prototype._normalizeHref = function(href) {
+webdav._normalizeHref = function(href) {
 	return href.lastIndexOf('/') == href.length - 1 ? href.substring(0, href.length - 1) : href;
 };
 
-WebDavClient.prototype._parsePropfindResult = function(xhr) {
+webdav._parsePropfindResult = function(xhr) {
 	var docs = [],
 	    childNodes = xhr.responseXML.childNodes[0].childNodes;
 
@@ -314,9 +316,11 @@ function UploadWorkerManager(uploadLimit) {
 UploadWorkerManager.isSupported = function() {
 	return window.Worker !== undefined;
 };
-UploadWorkerManager.prototype._log = createLogger('UploadWorkerManager');
-UploadWorkerManager.prototype._workerLog = createLogger('UploadWorker');
-UploadWorkerManager.prototype.upload = function(method, url, data, onSuccess, onError, onProgress) {
+
+var uploadManager = UploadWorkerManager.prototype;
+uploadManager._log = createLogger('UploadWorkerManager');
+uploadManager._workerLog = createLogger('UploadWorker');
+uploadManager.upload = function(method, url, data, onSuccess, onError, onProgress) {
 	url = resolveUrl(url);
 
 	if (this._pendingUploads[url])
@@ -337,7 +341,7 @@ UploadWorkerManager.prototype.upload = function(method, url, data, onSuccess, on
 
 	return true;
 };
-UploadWorkerManager.prototype.terminate = function() {
+uploadManager.terminate = function() {
 	this._worker.terminate();
 	this._worker = null;
 };

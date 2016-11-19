@@ -4,6 +4,7 @@ var CmsxService = require('./services/cmsx-service.js');
 var WebDavClient = require('./services/webdav-client.js');
 var ContextMenu = require('./views/cmsx-context-menu.js');
 var TreeView = require('./views/cmsx-tree-view.js');
+var ConfirmDialog = require('./views/cmsx-confirm-dialog.js');
 
 function CmsxResourceManager(webdavClient, rootURL) {
 	this.webdav = webdavClient;
@@ -15,16 +16,12 @@ var manager = CmsxResourceManager.prototype;
 
 manager.createResourceTreeView = function(parentElement) {
 	var resourceTreeView = new TreeView(parentElement, new TreeView.Features()
-	.itemClickable(this._handleResourceItemClick)
-	.itemOptions(this._handleResourceOptions)
-	.itemCheckable()
-	.toolbarButton('delete', 'cmsx-contextual', function(evt, listView) {
-		console.log('delete selected resources');
-		console.log(listView.checked());
-	})
-	.toolbarButton('add', null, function(evt, listView) {
-		console.log('add resource');
-	}));
+		.itemClickable(this._handleResourceItemClick)
+		.itemOptions(this._handleResourceOptions)
+		.itemCheckable()
+		.toolbarButton('delete', this._handleDeleteResources, 'cmsx-contextual')
+		.toolbarButton('upload', this._handleCreateResourceButtonClick)
+		.toolbarButton('new collection', this._handleCreateCollectionButtonClick));
 	resourceTreeView.load = this._loadCollection.bind(this, resourceTreeView);
 	return resourceTreeView;
 };
@@ -48,10 +45,6 @@ manager._handleResourceItemClick = function(item, evt, treeView) {
 	} else {
 		// TODO: show media
 	}
-};
-
-manager._handleResourceOptions = function(item, evt) {
-	
 };
 
 manager._clearTreeView = function(treeView) {
@@ -125,6 +118,62 @@ manager._toViewModel = function(davItem) {
 		description: description,
 		collection: davItem.resourcetype === 'collection'
 	};
+};
+
+manager._handleResourceOptions = function(item, evt) {
+	if (!this._resourceContextMenu) {
+		this._resourceContextMenu = new ContextMenu([
+     		{
+    			label: 'rename',
+    			callback: this.showResourceRenameDialog
+    		},
+    		{
+    			label: 'move',
+    			callback: this.showResourceMoveDialog
+    		},
+    		{
+    			label: 'delete',
+    			callback: this.showResourceDeleteDialog
+    		}
+    	]);
+	}
+
+	this._resourceContextMenu.show(evt, item);
+};
+
+manager.showResourceRenameDialog = function(item) {
+	
+};
+
+manager.showResourceMoveDialog = function(item) {
+	
+};
+
+manager.showResourceDeleteDialog = function(items) {
+	if (items.length === undefined) items = [items];
+	if (items.length === 0) return;
+	var labels = items.reduce(function(labels,item) {
+		return labels.length > 200 ? ', ...' : labels === '' ? item.label : labels + ', ' + item.label;
+	}, '');
+	var message = 'Do you really want to delete ' + labels + '?';
+	ConfirmDialog.confirm(message, this.deleteResources.bind(this, items));
+};
+
+manager.deleteResources = function(items) {
+	console.log('delete resources');
+	console.log(items);
+};
+
+manager._handleCreateResourceButtonClick = function(evt, treeView) {
+	console.log('upload');
+};
+
+manager._handleCreateCollectionButtonClick = function(evt, treeView) {
+	console.log('add resource');
+};
+
+manager._handleDeleteResources = function(evt, treeView) {
+	this.showResourceDeleteDialog(treeView.checked());
 };
 
 module.exports = CmsxResourceManager;

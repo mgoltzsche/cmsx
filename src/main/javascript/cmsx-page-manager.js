@@ -5,6 +5,7 @@ var WebDavClient = require('./services/webdav-client.js');
 var ContextMenu = require('./views/cmsx-context-menu.js');
 var TreeView = require('./views/cmsx-tree-view.js');
 var createDialog = require('./views/cmsx-dialog.js');
+var ConfirmDialog = require('./views/cmsx-confirm-dialog.js');
 var form = require('./views/cmsx-form.js');
 
 function CmsxPageManager(pageService, resourcePicker) {
@@ -25,13 +26,8 @@ manager.createPageTreeView = function(parentElement) {
 		.itemClickable(this._handlePageItemClick)
 		.itemOptions(this._handlePageOptions)
 		.itemCheckable()
-		.toolbarButton('delete', 'cmsx-contextual', function(evt, listView) {
-			console.log('delete selected pages');
-			console.log(listView.checked());
-		})
-		.toolbarButton('add', null, function(evt, listView) {
-			console.log('add page');
-		}));
+		.toolbarButton('delete', this._handleDeleteCheckedPages, 'cmsx-contextual')
+		.toolbarButton('add', this._handleAddPage));
 	pageTreeView.load = this._loadPageTree.bind(this, pageTreeView);
 	return pageTreeView;
 };
@@ -129,6 +125,11 @@ manager.deletePage = function(page) {
 	//this.pageService.deletePage(page.id);
 };
 
+manager.deletePages = function(pages) {
+	console.log('TODO: delete pages');
+	//this.pageService.deletePage(page.id);
+};
+
 manager.pickPage = function(setter, currentValue) {
 	if (!this._pagePicker) {
 		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 500});
@@ -138,6 +139,21 @@ manager.pickPage = function(setter, currentValue) {
 
 	this._pagePicker.load(currentValue || null);
 	this._pagePickerDialog.show();
+};
+
+manager._handleAddPage = function(evt, treeView) {
+	this.showPageCreateDialog();
+};
+
+manager._handleDeleteCheckedPages = function(evt, treeView) {
+	var checked = treeView.checked();
+	if (checked.length > 0) {
+		var labels = checked.reduce(function(labels,item) {
+			return labels.length > 200 ? ', ...' : labels === '' ? item.label : labels + ', ' + item.label;
+		}, '');
+		var message = 'Do you really want to delete ' + labels + '?';
+		ConfirmDialog.confirm(message, this.deletePages.bind(this, checked));
+	}
 };
 
 module.exports = CmsxPageManager;
