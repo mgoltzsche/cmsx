@@ -1,28 +1,44 @@
 var utils = require('./cmsx-utils.js');
-var MediumEditor = require('medium-editor');
-var CmsxService = require('./services/cmsx-service.js');
-var WebDavClient = require('./services/webdav-client.js');
 var ContextMenu = require('./views/cmsx-context-menu.js');
 var TreeView = require('./views/cmsx-tree-view.js');
-var createDialog = require('./views/cmsx-dialog.js');
+var Dialog = require('./views/cmsx-dialog.js');
 var ConfirmDialog = require('./views/cmsx-confirm-dialog.js');
-var form = require('./views/cmsx-form.js');
+var Form = require('./views/cmsx-form.js');
 
 function CmsxPageManager(pageService, resourcePicker) {
 	utils.bindAll(this);
 	this.pageService = pageService;
 	this.resourcePicker = resourcePicker;
+	this.pagePickerDialog = Dialog.createPool({preferredWidth: 500, preferredHeight: 500}, this.createPageTreeView);
+	this.pagePrefsDialog = Dialog.createPool({}, this.createPagePrefsForm);
+	this.pageOptions = ContextMenu.options()
+		.add('edit', this.showPagePrefsDialog)
+		.add('delete', this.deletePage)
+		.add('add', this.showPageCreateDialog)
+		.add('pick', this.pickPage);
 }
 
 var manager = CmsxPageManager.prototype;
+
+manager.destroy = function() {
+	this.pagePickerDialog.destroy();
+	this.pagePrefsDialog.destroy();
+	delete this.pagePickerDialog;
+	delete this.pagePrefsDialog;
+	delete this.pageOptions;
+	delete this.resourcePicker;
+	delete this.pageService;
+	ContextMenu.destroy();
+	ConfirmDialog.destroy();
+};
 
 manager.currentPageID = function() {
 	var id = window.location.href.match(/([^\/]+)\/index.html(\?|#|$)/)[1];
 	return id === 'p' ? '' : id;
 };
 
-manager.createPageTreeView = function(parentElement) {
-	var pageTreeView = new TreeView(parentElement, new TreeView.Features()
+manager.createPageTreeView = function() {
+	var pageTreeView = new TreeView(new TreeView.Features()
 		.itemClickable(this._handlePageItemClick)
 		.itemOptions(this._handlePageOptions)
 		.itemCheckable()
@@ -30,6 +46,16 @@ manager.createPageTreeView = function(parentElement) {
 		.toolbarButton('add', this._handleAddPage));
 	pageTreeView.load = this._loadPageTree.bind(this, pageTreeView);
 	return pageTreeView;
+};
+
+manager.createPagePrefsForm = function(dialog) {
+	return new Form()
+		.addInitialInput('id', 'ID')
+		.addInput('title', 'Title')
+		.addInput('renderer', 'Renderer')
+		.addPickableInput('src', 'Content', 'text', this.resourcePicker)
+		.addInput('stylesheet', 'XSLT stylesheet')
+		.addButton('save', true, this.savePage);
 };
 
 manager._loadPageTree = function(treeView, pageID) {
@@ -57,46 +83,11 @@ manager._handlePageItemClick = function(item, evt, treeView) {
 };
 
 manager._handlePageOptions = function(item, evt) {
-	if (!this._pageContextMenu) {
-		this._pageContextMenu = new ContextMenu([
-     		{
-    			label: 'edit',
-    			callback: this.showPageEditDialog
-    		},
-    		{
-    			label: 'delete',
-    			callback: this.deletePage
-    		},
-    		{
-    			label: 'add',
-    			callback: this.showPageCreateDialog
-    		},
-    		{
-    			label: 'pick',
-    			callback: this.pickPage
-    		}
-    	]);
-	}
-
-	this._pageContextMenu.show(evt, item.page);
+	ContextMenu.show(evt, item.page, this.pageOptions);
 };
 
-manager.showPageEditDialog = function(page) {
-	if (!this._pagePreferencesForm) {
-		this._pagePreferencesDialog = createDialog();
-		this._pagePreferencesForm = new form.CmsxForm()
-			.addInitialInput('id', 'ID')
-			.addInput('title', 'Title')
-			.addInput('renderer', 'Renderer')
-			.addPickableInput('src', 'Content', 'text', this.resourcePicker)
-			.addInput('stylesheet', 'XSLT stylesheet')
-			.addButton('save', true, this.savePage);
-		this._pagePreferencesForm.dialog = this._pagePreferencesDialog;
-		this._pagePreferencesForm.init(this._pagePreferencesDialog.contentElement());
-	}
-
-	this._pagePreferencesForm.set(this._toPageProps(page));
-	this._pagePreferencesDialog.show();
+manager.showPagePrefsDialog = function(page) {
+	this.pagePrefsDialog.get().show().content.set(this._toPageProps(page));
 };
 
 manager.savePage = function(form, evt) {
@@ -117,7 +108,7 @@ manager._toPageProps = function(page) {
 };
 
 manager.showPageCreateDialog = function(parentPage) {
-	this.showPageEditDialog({parent: parentPage.id}); // TODO: handle parent
+	this.showPagePrefsDialog({parent: parentPage.id}); // TODO: handle parent
 };
 
 manager.deletePage = function(page) {
@@ -131,14 +122,7 @@ manager.deletePages = function(pages) {
 };
 
 manager.pickPage = function(setter, currentValue) {
-	if (!this._pagePicker) {
-		this._pagePickerDialog = createDialog({preferredWidth: 500, preferredHeight: 500});
-		var pageID = this.currentPageID();
-		this._pagePicker = this.createPageTreeView(this._pagePickerDialog.contentElement());
-	}
-
-	this._pagePicker.load(currentValue || null);
-	this._pagePickerDialog.show();
+	this.pagePickerDialog.get().show().content.load(currentValue || null);
 };
 
 manager._handleAddPage = function(evt, treeView) {

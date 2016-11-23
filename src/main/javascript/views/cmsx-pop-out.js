@@ -8,16 +8,9 @@ var utils = require('../cmsx-utils.js');
  * @returns the created PopOut instance
  */
 function PopOut(className) {
-	this._className = className;
-	var el = this._element = document.createElement('div');
-	el.style.position = 'fixed';
-	el.style.display = 'block';
-	el.style.overflow = 'hidden';
-	this._visible = false;
-	this._alignHorizontal = this._alignVertical = 'center';
-	document.body.appendChild(this._element);
 	utils.bindAll(this);
-	this._update();
+	this.init(className);
+	document.body.appendChild(this._element);
 }
 
 var popOut = PopOut.prototype;
@@ -35,8 +28,15 @@ popOut._axis = [
 	}
 ];
 
-popOut.contentElement = function() {
-	return this._element;
+popOut.init = function(className) {
+	this._className = className;
+	this._visible = false;
+	this._alignHorizontal = this._alignVertical = 'center';
+	var el = this._element = document.createElement('div');
+	el.style.position = 'fixed';
+	el.style.display = 'block';
+	el.style.overflow = 'hidden';
+	this._update();
 };
 
 popOut.destroy = function() {
@@ -45,18 +45,19 @@ popOut.destroy = function() {
 	this._element = null;
 };
 
+popOut.contentElement = function() {
+	return this._element;
+};
+
 popOut.show = function(evt) {
-	evt = evt || window.event;
-    evt.preventDefault();
-    evt.stopPropagation();
-	this._position(evt);
+	this.position(evt);
 
 	if (this._visible === false) {
 		this._visible = true;
 		this._update();
 		document.body.addEventListener('keyup', this._handleEscapeKey);
-		document.body.addEventListener('click', this._handleDocumentClick);
-		this._element.addEventListener('click', this._handleElementClick, true);
+		document.body.addEventListener('click', this._handleDocumentClick, true);
+		this._element.addEventListener('click', this._handleElementClick);
 	}
 };
 
@@ -65,8 +66,8 @@ popOut.hide = function() {
 		this._visible = false;
 		this._update();
 		document.body.removeEventListener('keyup', this._handleEscapeKey);
-		document.body.removeEventListener('click', this._handleDocumentClick);
-		this._element.removeEventListener('click', this._handleElementClick, true);
+		document.body.removeEventListener('click', this._handleDocumentClick, true);
+		this._element.removeEventListener('click', this._handleElementClick);
 	}
 };
 
@@ -78,7 +79,8 @@ popOut._update = function() {
 	this._element.style.visibility = this._visible ? 'visible' : 'hidden';
 };
 
-popOut._position = function(evt) {
+popOut.position = function(evt) {
+	evt = evt || window.event;
 	var el, dot, eventDoc, doc, body, pageX, pageY, menuWidth, menuHeight, mouseX, mouseY;
 
 	// Get content size
@@ -147,6 +149,20 @@ popOut._handleElementClick = function(evt) {
 popOut._handleEscapeKey = function(evt) {
 	if (evt.keyCode === 27) {
 		this.hide();
+	}
+};
+
+PopOut.show = function() {
+	if (!this._instance) {
+		this._instance = new this();
+	}
+
+	this._instance.show.apply(this._instance, Array.prototype.slice.call(arguments));
+};
+
+PopOut.destroy = function() {
+	if (this._instance) {
+		this._instance.destroy();
 	}
 };
 

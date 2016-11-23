@@ -27,7 +27,7 @@ input._createInputElement = function(id, label, type) {
 	this._inputContainer.appendChild(input);
 };
 
-input.init = function(parentElement, form) {
+input.mount = function(parentElement, form) {
 	this.form = form;
 	parentElement.appendChild(this._element);
 };
@@ -152,7 +152,7 @@ form.add = function(input) {
 	if (this._inputs[input.id])
 		throw 'Cannot add input with duplicate ID: ' + input.id;
 
-	input.init(this._element, this);
+	input.mount(this._element, this);
 	this._inputs[input.id] = input;
 	return this;
 };
@@ -164,7 +164,7 @@ form.remove = function(input) {
 	return this;
 };
 
-form.init = function(parentElement, form) {
+form.mount = function(parentElement, form) {
 	this.form = form || this;
 	parentElement.appendChild(this._element);
 };
@@ -203,8 +203,6 @@ form.get = function(values) {
 	return values;
 };
 
-module.exports = {
-		CmsxForm: CmsxForm,
-		CmsxInput: CmsxInput,
-		CmsxFormButton: CmsxFormButton
-};
+CmsxForm.CmsxInput = CmsxInput;
+CmsxForm.CmsxFormButton = CmsxFormButton;
+module.exports = CmsxForm;

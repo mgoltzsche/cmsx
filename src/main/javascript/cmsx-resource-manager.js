@@ -1,21 +1,35 @@
 var utils = require('./cmsx-utils.js');
 var MediumEditor = require('medium-editor');
-var CmsxService = require('./services/cmsx-service.js');
 var WebDavClient = require('./services/webdav-client.js');
 var ContextMenu = require('./views/cmsx-context-menu.js');
 var TreeView = require('./views/cmsx-tree-view.js');
+var Dialog = require('./views/cmsx-dialog.js');
 var ConfirmDialog = require('./views/cmsx-confirm-dialog.js');
 
 function CmsxResourceManager(webdavClient, rootURL) {
+	utils.bindAll(this);
 	this.webdav = webdavClient;
 	this.rootURL = rootURL;
-	utils.bindAll(this);
+	this.resourcePickerDialog = Dialog.createPool({preferredWidth: 500, preferredHeight: 500}, this.createResourceTreeView);
+	this.resourceOptions = ContextMenu.options()
+		.add('rename', this.showResourceRenameDialog)
+    	.add('move', this.showResourceMoveDialog)
+    	.add('delete', this.showResourceDeleteDialog);
 }
 
 var manager = CmsxResourceManager.prototype;
 
-manager.createResourceTreeView = function(parentElement) {
-	var resourceTreeView = new TreeView(parentElement, new TreeView.Features()
+manager.destroy = function() {
+	this.resourcePickerDialog.destroy();
+	delete this.resourcePickerDialog;
+	delete this.resourceOptions;
+	delete this.webdav;
+	ContextMenu.destroy();
+	ConfirmDialog.destroy();
+};
+
+manager.createResourceTreeView = function() {
+	var resourceTreeView = new TreeView(new TreeView.Features()
 		.itemClickable(this._handleResourceItemClick)
 		.itemOptions(this._handleResourceOptions)
 		.itemCheckable()
@@ -27,7 +41,7 @@ manager.createResourceTreeView = function(parentElement) {
 };
 
 manager.pickResource = function(setter, currentValue) {
-	
+	this.resourcePickerDialog.get().show().content.load(currentValue || null);
 };
 
 manager._loadCollection = function(treeView, href, selectHref) {
@@ -45,11 +59,6 @@ manager._handleResourceItemClick = function(item, evt, treeView) {
 	} else {
 		// TODO: show media
 	}
-};
-
-manager._clearTreeView = function(treeView) {
-	treeView.setAncestors([]);
-	treeView.setChildren([]);
 };
 
 manager._handleDavLoaded = function(treeView, childFileUrl, davResult) {
@@ -71,7 +80,7 @@ manager._handleDavLoaded = function(treeView, childFileUrl, davResult) {
 	}
 
 	// Display empty list (shouldn't happen)
-	this._clearTreeView(treeView);
+	treeView.clear();
 };
 
 manager._toParentViewModel = function(parentDavItem) {
@@ -121,37 +130,20 @@ manager._toViewModel = function(davItem) {
 };
 
 manager._handleResourceOptions = function(item, evt) {
-	if (!this._resourceContextMenu) {
-		this._resourceContextMenu = new ContextMenu([
-     		{
-    			label: 'rename',
-    			callback: this.showResourceRenameDialog
-    		},
-    		{
-    			label: 'move',
-    			callback: this.showResourceMoveDialog
-    		},
-    		{
-    			label: 'delete',
-    			callback: this.showResourceDeleteDialog
-    		}
-    	]);
-	}
-
-	this._resourceContextMenu.show(evt, item);
+	ContextMenu.show(evt, item, this.resourceOptions);
 };
 
 manager.showResourceRenameDialog = function(item) {
-	
+	// TODO: 
 };
 
 manager.showResourceMoveDialog = function(item) {
-	
+	// TODO: 
 };
 
 manager.showResourceDeleteDialog = function(items) {
 	if (items.length === undefined) items = [items];
-	if (items.length === 0) return;
+	else if (items.length === 0) return;
 	var labels = items.reduce(function(labels,item) {
 		return labels.length > 200 ? ', ...' : labels === '' ? item.label : labels + ', ' + item.label;
 	}, '');

@@ -121,19 +121,26 @@ function CmsxManager() {
 	var content1 = document.createElement('div');
 	var pageBrowserButton = new toolbar.CmsxToolbarContent('pages', content1, function(element) {
 		if (element.childNodes.length === 0) {
-			this.pageManager.createPageTreeView(element).load();
+			this.pageManager.createPageTreeView().mount(element).load();
 		}
 	}.bind(this, content1));
 
 	var content2 = document.createElement('div');
 	var resourceBrowserButton = new toolbar.CmsxToolbarContent('resources', content2, function(element) {
 		if (element.childNodes.length === 0) {
-			this.resourceManager.createResourceTreeView(element).load();
+			this.resourceManager.createResourceTreeView().mount(element).load();
 		}
 	}.bind(this, content2));
 	new toolbar.CmsxToolbar([pageBrowserButton, resourceBrowserButton]);
 }
 
 var manager = CmsxManager.prototype;
+
+manager.destroy = function() {
+	this.pageManager.destroy();
+	this.resourceManager.destroy();
+	delete this.pageManager;
+	delete this.resourceManager;
+};
 
 module.exports = CmsxManager;

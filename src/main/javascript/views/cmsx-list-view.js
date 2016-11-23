@@ -1,4 +1,4 @@
-function ListView(parentElement, toolbarSupported, features, items) {
+function ListView(toolbarSupported, features, items) {
 	this.toolbarSupported = !!toolbarSupported;
 	this.context = this;
 	this._element = document.createElement('div');
@@ -14,10 +14,14 @@ function ListView(parentElement, toolbarSupported, features, items) {
 
 	this.setItems(items);
 	this._element.appendChild(this._listElement);
-	parentElement.appendChild(this._element);
 }
 
 var list = ListView.prototype;
+
+list.mount = function(parentElement) {
+	parentElement.appendChild(this._element);
+	return this;
+};
 
 list.destroy = function() {
 	this._element.parentElement.removeChild(this._element);
@@ -26,8 +30,11 @@ list.destroy = function() {
 };
 
 list.setItems = function(items) {
-	this._items = items = items || [];
+	items = items || [];
 
+	if (this._items === items) return;
+
+	this._items = items;
 	var itemView, i, li, a;
 
 	for (i = 0; i < items.length; i++) {
@@ -175,7 +182,7 @@ function ListItemCheckboxRenderer(delegate, listView) {
 	listView.toolbar().prepend(listView._allCheckbox);
 	listView._allCheckbox.addEventListener('change', this._handleAllItemsChange);
 	listView.destroy = function(listDestroy) {
-		this.destroy();
+		listDestroy();
 		this._listView._allCheckbox.removeEventListener('change', this._handleAllItemsChange);
 		this._listView._allCheckbox = null;
 	}.bind(this, listView.destroy);
@@ -328,8 +335,8 @@ ListFeatures.prototype.toolbarButton = function(label, callback, className) {
 		btn.addEventListener('click', clickHandler);
 		listView._buttonBar.appendChild(btn);
 		listView.destroy = function(listDestroy, clickHandler) {
-			this.removeEventListener('click', clickHandler);
 			listDestroy();
+			this.removeEventListener('click', clickHandler);
 		}.bind(btn, listView.destroy, clickHandler);
 	}.bind(undefined, this.apply));
 };

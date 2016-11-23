@@ -1,9 +1,9 @@
 var utils = require('../cmsx-utils.js');
-var createDialog = require('./cmsx-dialog.js');
+var Dialog = require('./cmsx-dialog.js');
 
 function ConfirmDialog() {
 	utils.bindAll(this);
-	this._dialog = createDialog();
+	this._dialog = Dialog.create();
 	var el = this._dialog.contentElement(),
 		buttonsElement = document.createElement('div');
 	this._applyButton = document.createElement('a');
@@ -63,10 +63,20 @@ confirm._handleCancelClick = function(evt) {
 
 ConfirmDialog.confirm = function(message, applyCallback, cancelCallback, evt) {
 	if (!this._instance) {
-		this._instance = new ConfirmDialog();
+		this._instance = new this();
+		this._instance.destroy = function(destroy) {
+			var dialog = this._instance;
+			this._instance = null;
+			destroy.call(dialog);
+		}.bind(this, this._instance.destroy);
 	}
 
 	this._instance.confirm(message, applyCallback, cancelCallback, evt);
+	return this._instance;
+}.bind(ConfirmDialog);
+
+ConfirmDialog.destroy = function() {
+	if (this._instance) {this._instance.destroy();}
 }.bind(ConfirmDialog);
 
 module.exports = ConfirmDialog;

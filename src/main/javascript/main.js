@@ -10,6 +10,7 @@
  */
 
 var $ = require('jquery');
+require('./cmsx-polyfills.js');
 var CmsxManager = require('./cmsx-manager.js');
 
 $(document).ready(function() {

@@ -1,5 +1,5 @@
-var log = require('../logger.js')('CmsxDialog');
 var utils = require('../cmsx-utils.js');
+var DestroyablePool = require('../cmsx-destroyable-pool.js');
 
 function ModalOverlay(onClick) {
 	this._onClick = onClick;
@@ -88,25 +88,26 @@ DialogStack.prototype._updateZIndex = function() {
 	}
 };
 
-function CmsxDialog(dialogStack, prefs) {
+var dialogStack = new DialogStack();
+
+
+function CmsxDialog(dialogStack, contentView, prefs) {
 	utils.bindAll(this);
+	this.init(dialogStack, contentView, prefs);
+}
+
+var dialog = CmsxDialog.prototype;
+
+dialog.init = function(dialogStack, prefs) {
 	prefs = prefs || {};
 
-	if (prefs.onClose) {
-		this.onClose = prefs.onClose;
-	}
-
-	if (prefs.onResize) {
-		this.onResize = prefs.onResize;
-	}
-
-	this._dialogStack = dialogStack;
 	this._className = prefs.className;
 	this._resizeProportional = !!prefs._resizeProportional;
 	this._prefWidth = prefs.preferredWidth || 0;
 	this._prefHeight = prefs.preferredHeight || 0;
 	this._minMarginX = typeof prefs.minMarginX == 'number' ? prefs.minMarginX : 10;
 	this._minMarginY = typeof prefs.minMarginY == 'number' ? prefs.minMarginY : 10;
+	this._dialogStack = dialogStack;
 	this._visible = false;
 	this._active = false;
 
@@ -126,69 +127,58 @@ function CmsxDialog(dialogStack, prefs) {
 	document.body.appendChild(els.container);
 
 	this._deriveOffset();
-	this._deriveMaxContentSize();
-}
-
-var dialog = CmsxDialog.prototype;
-
-dialog.onClose = dialog.onResize = function() {};
+	this._deriveMaxContentSize();	
+};
 
 dialog.destroy = function() {
 	if (!this._elements) return;
 	this.hide();
-
-	if (this._contentController) { // Destroy controller
-		this._contentController.destroy(this);
-	}
-
-	this._elements.close.removeEventListener('click', this._handleClose);
 	document.body.removeChild(this._elements.container);
+	this._elements.close.removeEventListener('click', this._handleClose);
 	delete this._elements;
+};
+
+dialog.contentElement = function() {
+	return this._elements.content;
 };
 
 dialog.show = function() {
 	if (!this._visible) {
-		this._dialogStack.pushDialog(this);
 		this._visible = true;
-		this.resize();
-		document.body.addEventListener('keyup', this._handleEscapeKey);
-		window.addEventListener('resize', this.resize);
-		this.setActive(true);
-		return true;
+		this._doShow();
 	}
 
-	return false;
+	return this;
 };
 
 dialog.hide = function() {
 	if (this._visible) {
 		// Set state before listener invocation to guarantee method is not executed reentrant
 		this._visible = false;
-
-		this._dialogStack.popDialog();
-
-		try {
-			this.onClose();
-		} catch(e) {
-			log.error('Error in dialog close listener', e);
-		}
-
-		document.body.removeEventListener('keyup', this._handleEscapeKey);
-		window.removeEventListener('resize', this.resize);
-		this.setActive(false);
-		return true;
+		this._doHide();
 	}
 
-	return false;
+	return this;
+};
+
+dialog._doShow = function() {
+	this._dialogStack.pushDialog(this);
+	this.resize();
+	document.body.addEventListener('keyup', this._handleEscapeKey);
+	window.addEventListener('resize', this.resize);
+	this.setActive(true);
+};
+
+dialog._doHide = function() {
+	this._dialogStack.popDialog();
+	document.body.removeEventListener('keyup', this._handleEscapeKey);
+	window.removeEventListener('resize', this.resize);
+	this.setActive(false);
 };
 
 dialog.setActive = function(active) {
 	this._active = active;
 	this._updateClassName();
-};
-
-dialog.contentElement = function() {
-	return this._elements.content;
 };
 
 dialog.getMaxContentWidth = function() {
@@ -216,7 +206,7 @@ dialog.setPreferredContentSize = function(width, height, resizeProportional) {
 };
 
 dialog.resize = function() {
-	log.debug('Resize to ' + this._prefWidth + 'x' + this._prefHeight);
+//	log.debug('Resize to ' + this._prefWidth + 'x' + this._prefHeight);
 	this._deriveMaxContentSize();
 	var contentStyle = this._elements.content.style,
 		maxWidth = this._maxContentWidth,
@@ -245,8 +235,6 @@ dialog.resize = function() {
 	contentStyle.maxWidth = maxWidth + 'px';
 	contentStyle.maxHeight = maxHeight + 'px';
 	contentStyle.overflow = proportional ? 'hidden' : 'auto';
-
-	this.onResize(maxWidth, maxHeight);
 };
 
 /**
@@ -272,7 +260,7 @@ dialog._deriveOffset = function() {
 	content.style.maxHeight = testSize;
 	this._offsetX = dialog.offsetWidth - testWidth; // Detect offset x
 	this._offsetY = dialog.offsetHeight - testWidth; // Detect offset y
-	log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
+//	log.debug('Detected offset: x: ' + this._offsetX + ', y: ' + this._offsetY);
 	content.removeAttribute('style'); // Remove all inline styles used to detect offset
 	dialog.removeAttribute('style');
 	if (this._offsetX < 0) this._offsetX = 0; // Fallback on error
@@ -307,11 +295,47 @@ dialog._handleEscapeKey = function(evt) {
 	}
 };
 
-function DialogFactory(dialogStack) {
-	return function(props) {
-		dialogStack.init();
-		return new CmsxDialog(dialogStack, props);
-	};
+
+function CmsxPooledDialog(dialogStack, pool, prefs) {
+	utils.bindAll(this);
+	this._pool = pool;
+	this.init(dialogStack, prefs);
 }
 
-module.exports = DialogFactory(new DialogStack());
+CmsxPooledDialog.prototype.destroyContent = function() {};
+
+utils.decorate(CmsxPooledDialog.prototype, dialog, {
+	destroy: function(destroy) {
+		destroy.call(this);
+		this.content.destroy();
+	},
+	_doHide: function(hide) {
+		hide.call(this);
+		this._pool.release(this);
+	}
+});
+
+var createDialogPool = function createDialogPool(dialogStack, props, contentFactory, size) {
+	return new DestroyablePool(function(pool) {
+		dialogStack.init();
+		var dialog = new CmsxPooledDialog(dialogStack, pool, props),
+			content = contentFactory(dialog);
+		dialog.content = content;
+		content.mount(dialog.contentElement());
+		return dialog;
+	}, size || 1, 1);
+}.bind(undefined, dialogStack);
+
+
+var createDialog = (function(dialogStack) {
+	return function createDialog(props) {
+		dialogStack.init();
+		return new this(dialogStack, props);
+	};
+})(dialogStack);
+
+
+CmsxDialog.create = createDialog;
+CmsxDialog.createPool = createDialogPool;
+CmsxDialog.Pooled = CmsxPooledDialog;
+module.exports = CmsxDialog;
