@@ -152,18 +152,4 @@ popOut._handleEscapeKey = function(evt) {
 	}
 };
 
-PopOut.show = function() {
-	if (!this._instance) {
-		this._instance = new this();
-	}
-
-	this._instance.show.apply(this._instance, Array.prototype.slice.call(arguments));
-};
-
-PopOut.destroy = function() {
-	if (this._instance) {
-		this._instance.destroy();
-	}
-};
-
 module.exports = PopOut;

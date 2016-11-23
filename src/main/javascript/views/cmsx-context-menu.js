@@ -8,30 +8,32 @@ function ContextMenu() {
 	document.body.appendChild(this._element);
 }
 
-var menu = ContextMenu.prototype;
+var base = PopOut.prototype;
+var menu = utils.extend(ContextMenu.prototype, base);
 
-utils.decorate(menu, PopOut.prototype, {
-	init: function(delegate, className) {
-		delegate.call(this, className);
-		this._listView = new ListView(false, new ListView.Features()
-			.itemClickable(this._handleOptionClick))
-			.mount(this.contentElement());
-	},
-	destroy: function(delegate) {
-		delegate.call(this);
-		this._listView.destroy();
-		delete this._listView;
-	},
-	show: function(delegate, evt, context, options) {
-		this._listView.setItems(options);
-		this._context = context;
-		delegate.call(this, evt);
-	},
-	hide: function(delegate) {
-		this._context = null;
-		delegate.call(this);
-	}
-});
+menu.init = function(className) {
+	base.init.call(this, className);
+	this._listView = new ListView(false, new ListView.Features()
+		.itemClickable(this._handleOptionClick))
+		.mount(this.contentElement());
+};
+
+menu.destroy = function() {
+	base.destroy.call(this);
+	this._listView.destroy();
+	delete this._listView;
+};
+
+menu.show = function(evt, context, options) {
+	this._listView.setItems(options);
+	this._context = context;
+	base.show.call(this, evt);
+};
+
+menu.hide = function() {
+	this._context = null;
+	base.hide.call(this);
+};
 
 menu._handleOptionClick = function(option, evt) {
 	option.callback(this._context, evt);
@@ -47,6 +49,20 @@ ContextMenu.options = function() {
 	var options = [];
 	options.add = addOption;
 	return options;
+};
+
+PopOut.show = function() {
+	if (!this._instance) {
+		this._instance = new this();
+	}
+
+	this._instance.show.apply(this._instance, Array.prototype.slice.call(arguments));
+};
+
+PopOut.destroy = function() {
+	if (this._instance) {
+		this._instance.destroy();
+	}
 };
 
 ContextMenu.show = PopOut.show;

@@ -1,7 +1,9 @@
 var debug = !!window.location.href.match(/(\?|&)debug=1(&|#|$)/);
 
 // TODO: choose debug impl only if flag set
-var boundFunction = function(fn, thisObj, boundArgs) {
+Function.prototype.bind = function(thisObj) {
+	var boundArgs = Array.prototype.slice.call(arguments, 1),
+		fn = this;
 	return function() {
 		var args = boundArgs.concat(Array.prototype.slice.call(arguments));
 		try {
@@ -18,11 +20,6 @@ var boundFunction = function(fn, thisObj, boundArgs) {
 			throw err;
 		}
 	};
-};
-
-Function.prototype.bind = function(thisObj) {
-	var boundArgs = Array.prototype.slice.call(arguments, 1);
-	return boundFunction(this, thisObj, boundArgs);
 };
 
 

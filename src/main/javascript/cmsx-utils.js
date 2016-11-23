@@ -1,7 +1,4 @@
-function CmsxUtils() {
-}
-
-var utils = CmsxUtils.prototype;
+var utils = {};
 
 utils.bindAll = function(obj) {
 	var k, entry;
@@ -28,7 +25,7 @@ utils.extend = function(dest, srcObjects) {
 	return dest;
 };
 
-var decorate = function(decoratorFn, superFn) {
+/*var decorate = function(decoratorFn, superFn) {
 	return function() {
 		decoratorFn.apply(this, [superFn].concat(Array.prototype.slice.call(arguments)));
 	};
@@ -60,6 +57,6 @@ utils.decorate = function(obj, decorators) {
 		}
 	}
 	return obj;
-};
+};*/
 
 module.exports = utils;

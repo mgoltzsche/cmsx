@@ -302,18 +302,17 @@ function CmsxPooledDialog(dialogStack, pool, prefs) {
 	this.init(dialogStack, prefs);
 }
 
-CmsxPooledDialog.prototype.destroyContent = function() {};
+var pooled = utils.extend(CmsxPooledDialog.prototype, dialog);
 
-utils.decorate(CmsxPooledDialog.prototype, dialog, {
-	destroy: function(destroy) {
-		destroy.call(this);
-		this.content.destroy();
-	},
-	_doHide: function(hide) {
-		hide.call(this);
-		this._pool.release(this);
-	}
-});
+pooled.destroy = function() {
+	dialog.destroy.call(this);
+	this.content.destroy();
+};
+
+pooled._doHide = function() {
+	dialog._doHide.call(this);
+	this._pool.release(this);
+};
 
 var createDialogPool = function createDialogPool(dialogStack, props, contentFactory, size) {
 	return new DestroyablePool(function(pool) {

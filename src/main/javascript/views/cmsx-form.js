@@ -56,12 +56,10 @@ function CmsxInitialInput(id, label, type) {
 	this._createElements(id, label, type);
 }
 
-utils.decorate(CmsxInitialInput.prototype, input, {
-	set: function(delegate, values) {
-		delegate.call(this, values);
-		this._input.disabled = values[this.id] !== undefined;
-	}
-});
+utils.extend(CmsxInitialInput.prototype, input).set = function(values) {
+	input.set.call(this, values);
+	this._input.disabled = values[this.id] !== undefined;
+};
 
 
 function CmsxPickableInput(id, label, type, onPick) {
