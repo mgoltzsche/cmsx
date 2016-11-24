@@ -50,15 +50,16 @@ popOut.contentElement = function() {
 };
 
 popOut.show = function(evt) {
-	this.position(evt);
+	evt.stopPropagation();
 
 	if (this._visible === false) {
 		this._visible = true;
-		this._update();
 		document.body.addEventListener('keyup', this._handleEscapeKey);
-		document.body.addEventListener('click', this._handleDocumentClick, true);
+		document.body.addEventListener('click', this._handleDocumentClick);
 		this._element.addEventListener('click', this._handleElementClick);
 	}
+
+	this.position(evt);
 };
 
 popOut.hide = function() {
@@ -66,7 +67,7 @@ popOut.hide = function() {
 		this._visible = false;
 		this._update();
 		document.body.removeEventListener('keyup', this._handleEscapeKey);
-		document.body.removeEventListener('click', this._handleDocumentClick, true);
+		document.body.removeEventListener('click', this._handleDocumentClick);
 		this._element.removeEventListener('click', this._handleElementClick);
 	}
 };
@@ -109,6 +110,7 @@ popOut.position = function(evt) {
 
 	this._setValidPosition(this._axis[0], window.innerWidth, mouseX, mouseX, menuWidth);
 	this._setValidPosition(this._axis[1], window.innerHeight, mouseY, mouseY, menuHeight);
+	this._update();
 };
 
 popOut._setValidPosition = function(axis, available, offsetLower, offsetHigher, required) {
@@ -135,15 +137,13 @@ popOut._isValidAxisValue = function(available, offset, required) {
 };
 
 popOut._handleDocumentClick = function(evt) {
-	if (this._elementClicked) {
-		this._elementClicked = false;
-	} else {
-		this.hide();
-	}
+	console.log('document click');
+	this.hide();
 };
 
 popOut._handleElementClick = function(evt) {
-	this._elementClicked = true;
+	console.log('element click');
+	evt.stopPropagation();
 };
 
 popOut._handleEscapeKey = function(evt) {

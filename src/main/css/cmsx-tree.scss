@@ -11,6 +11,10 @@
 			border-bottom: none;
 			width: auto;
 
+			&:hover {
+				background: transparent;
+			}
+
 			&:before {
 				content: '\000bb';
 				padding-right: $margin/2;
