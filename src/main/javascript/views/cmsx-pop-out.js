@@ -59,7 +59,8 @@ popOut.show = function(evt) {
 		this._element.addEventListener('click', this._handleElementClick);
 	}
 
-	this.position(evt);
+	evt = evt || window.event;
+	this.positionAtElement(evt.target || evt.srcElement);
 };
 
 popOut.hide = function() {
@@ -80,9 +81,46 @@ popOut._update = function() {
 	this._element.style.visibility = this._visible ? 'visible' : 'hidden';
 };
 
+popOut.positionAtElement = function(element) {
+	var container, menuWidth, menuHeight, offsetX, offsetYmouseX, mouseY, relX, relY, lowX, lowY, highX, highY;
+
+	// Get content size
+	container = this._element;
+	container.style.left = '0px';
+	container.style.top = '0px';
+	menuWidth = container.offsetWidth;
+	menuHeight = container.offsetHeight;
+
+	elWidth = element.offsetWidth;
+	elHeight = element.offsetHeight;
+
+	// Get element position relative to view port
+	if (element.getBoundingClientRect) {
+		// ECMAScript 5 required: Includes CSS3 transforms
+		var rect = element.getBoundingClientRect();
+		vpX = rect.left;
+		vpY = rect.top;
+	} else {
+		// Fallback: No CSS3 transforms supported
+		offsetX = offsetY = 0;
+		while (element) {
+			offsetX += element.offsetLeft;
+			offsetY += element.offsetTop;
+			element = element.offsetParent;
+		}
+	
+		vpX = offsetX - (window.scrollX || window.pageXOffset || document.body.scrollLeft);
+		vpY = offsetY - (window.scrollY || window.pageYOffset || document.body.scrollTop);
+	}
+
+	this._setValidPosition(this._axis[0], window.innerWidth, vpX, vpX + elWidth, menuWidth);
+	this._setValidPosition(this._axis[1], window.innerHeight, vpY, vpY + elHeight, menuHeight);
+	this._update();
+};
+
 popOut.position = function(evt) {
 	evt = evt || window.event;
-	var el, dot, eventDoc, doc, body, pageX, pageY, menuWidth, menuHeight, mouseX, mouseY;
+	var el, menuWidth, menuHeight, mouseX, mouseY;
 
 	// Get content size
 	el = this._element;
@@ -90,23 +128,8 @@ popOut.position = function(evt) {
 	el.style.top = '0px';
 	menuWidth = el.offsetWidth;
 	menuHeight = el.offsetHeight;
-
-	// Get mouse position
-	if (evt.pageX === undefined && evt.clientX !== undefined) {
-        eventDoc = (evt.target && evt.target.ownerDocument) || document;
-        doc = eventDoc.documentElement;
-        body = eventDoc.body;
-
-        mouseX = evt.clientX +
-          (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
-          (doc && doc.clientLeft || body && body.clientLeft || 0);
-        mouseY = evt.clientY +
-          (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
-          (doc && doc.clientTop  || body && body.clientTop  || 0 );
-    } else {
-    	mouseX = evt.pageX;
-    	mouseY = evt.pageY;
-	}
+	mouseX = evt.clientX;
+	mouseY = evt.clientY;
 
 	this._setValidPosition(this._axis[0], window.innerWidth, mouseX, mouseX, menuWidth);
 	this._setValidPosition(this._axis[1], window.innerHeight, mouseY, mouseY, menuHeight);
