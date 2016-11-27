@@ -1,4 +1,4 @@
-.cmsx-pop-out {
+.cmsx-overlay {
 	position: fixed;
 	z-index: 999;
 	background: $backgroundColor;
@@ -6,19 +6,27 @@
 	@include border-radius($margin);
 	@include box-shadow(1px 2px 5px rgba(0,0,0,.5));
 
-	&.cmsx-pop-out-top-left {
+	&.cmsx-overlay-hidden {
+		visibility: hidden;
+	}
+
+	&.cmsx-overlay-visible {
+		visibility: visible;
+	}
+
+	&.cmsx-overlay-left {
 		@include border-radius($margin $margin 0 $margin);
 	}
 
-	&.cmsx-pop-out-top-right {
+	&.cmsx-overlay-right {
 		@include border-radius($margin $margin $margin 0);
 	}
 
-	&.cmsx-pop-out-bottom-left {
+	&.cmsx-overlay-bottom-left {
 		@include border-radius($margin 0 $margin $margin);
 	}
 
-	&.cmsx-pop-out-bottom-right {
+	&.cmsx-overlay-bottom-right {
 		@include border-radius(0 $margin $margin $margin);
 	}
 }
@@ -30,12 +38,12 @@
 		.cmsx-list, .cmsx-list-item {
 			border: none;
 		}
-	
+
 		.cmsx-list-item {
 			margin: 0;
 			padding: 0;
 			display: block;
-	
+
 			.cmsx-item-label {
 				&, &:visited, &:hover, &:active, &:focus {
 					display: block;
@@ -45,7 +53,7 @@
 					text-decoration: none;
 					width: auto;
 				}
-	
+
 				&:hover, &:active, &:focus {
 					background: $actionColor;
 					color: $backgroundColor;

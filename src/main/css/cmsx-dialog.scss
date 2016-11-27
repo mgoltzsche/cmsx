@@ -1,86 +1,96 @@
-.cmsx-modal-overlay, .cmsx-modal-click-zone {
+.cmsx-modal-background, .cmsx-modal-click-zone {
 	position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
 	visibility: visible;
-}
-.cmsx-modal-overlay {
 	z-index: 900;
 	background: #000000;
+	opacity: 0;
+
+	&.cmsx-hidden {
+		visibility: hidden;
+		opacity: 0;
+	}
+}
+
+.cmsx-modal-background {
+	z-index: 900;
+	opacity: 0.7;
 	background-repeat: no-repeat;
     background-attachment: fixed;
     @include gradient-radial(#aaaaaa, #000000);
-	@include opacity(70);
     @include transition(opacity $animationLength, visibility $animationLength ease-in);
-
-	&.cmsx-hidden {
-		visibility: hidden;
-		@include opacity(0);
-	}
 }
+
 .cmsx-modal-click-zone {
-	z-index: 987;
-	background: #000000;
-	@include opacity(0);
-
-	&.cmsx-hidden {
-		visibility: hidden;
-	}
+	z-index: 950;
 }
-
 
 .cmsx-dialog {
 	position: fixed;
-	top: 50%;
-	left: 50%;
-	z-index: 990;
+	z-index: 950;
 	padding: 10px;
-	@include translate(-50%, -50%);
 	background: $backgroundColor;
 	border: 1px solid $borderColor;
 	@include border-radius($borderRadius);
 	@include box-shadow(1px 3px 15px rgba(0,0,0,.5));
-
-	&.cmsx-dialog-hidden {
-		visibility: hidden;
-		top: -2000px;
-	}
-
-	&.cmsx-dialog-visible {
-		visibility: visible;
-		top: 50%;
-	}
-
-	&.cmsx-dialog-active, &.cms-dialog-visible {
-		@include transition(top $animationLength ease-out, opacity $animationLength ease-out, visibility $animationLength ease-in);
-	}
-
-	&.cmsx-dialog-inactive, &.cms-dialog-hidden {
-		@include transition(top $animationLength ease-in, opacity $animationLength ease-in, visibility $animationLength ease-in);
-	}
-
-	.cmsx-dialog-content, .cmsx-dialog-close {
-		visibility: visible;
-		@include transition(opacity $animationLength, visibility $animationLength ease-in);
-	}
+	@include transform(translate(0,0) scale(1));
 
 	&.cmsx-dialog-active {
-		@include opacity(100);
-
-		.cmsx-dialog-content, .cmsx-dialog-close {
-			@include opacity(100);
-		}
+		z-index: 970;
+		opacity: 1;
 	}
 
 	&.cmsx-dialog-inactive {
-		@include opacity(25);
+		z-index: 930;
+		opacity: 0.25;
 		@include box-shadow(1px 3px 5px rgba(0,0,0,.5));
+		@include transform(translate(0,0) scale(0.7));
+	}
 
-		.cmsx-dialog-content, .cmsx-dialog-close {
-			visibility: hidden;
-			@include opacity(0);
+	&.cmsx-overlay-visible {
+		@include transform(translate(0,0) scale(1));
+	}
+
+	&.cmsx-overlay-hidden {
+		@include transform(translate(0,-100vh) scale(0.7));
+	}
+
+	&.cmsx-overlay-transition-show {
+		&.cmsx-overlay-visible {
+			@include transform(translate(-50%,-50%) scale(0.001));
+		}
+
+		&.cmsx-dialog-active {
+			opacity: 0.25;
+		}
+	}
+
+	&.cmsx-animate {
+		&.cmsx-dialog-active, &.cms-overlay-visible {
+			@include transition(left $animationLength ease-out,
+			top $animationLength ease-out,
+			opacity $animationLength ease-out,
+			visibility $animationLength ease-in,
+			transform $animationLength ease-out,
+			-moz-transform $animationLength ease-out,
+			-webkit-transform $animationLength ease-out,
+			-ms-transform $animationLength ease-out,
+			-o-transform $animationLength ease-out);
+		}
+
+		&.cmsx-dialog-inactive, &.cms-overlay-hidden {
+			@include transition(left $animationLength ease-in,
+			top $animationLength ease-in,
+			opacity $animationLength ease-in,
+			visibility $animationLength ease-in,
+			transform $animationLength ease-in,
+			-moz-transform $animationLength ease-in,
+			-webkit-transform $animationLength ease-in,
+			-ms-transform $animationLength ease-in,
+			-o-transform $animationLength ease-in);
 		}
 	}
 
@@ -106,17 +116,9 @@
 			border: 1px solid $actionColor;
 		}
 	}
-	.cmsx-dialog-content {
-		position: relative; /* to contain absolute layout */
-		display: block;
-		margin: 0 auto;
-		overflow: hidden;
+
+	img {
 		max-width: 100%;
 		max-height: 100%;
-
-		img {
-			max-width: 100%;
-			max-height: 100%;
-		}
 	}
 }

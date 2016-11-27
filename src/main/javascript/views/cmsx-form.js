@@ -1,12 +1,4 @@
-var utils = require('../cmsx-utils.js');
-
 function CmsxInput(id, label, type) {
-	this._createElements(id, label, type);
-}
-
-var input = CmsxInput.prototype;
-
-input._createElements = function(id, label, type) {
 	this.id = id;
 	var el = this._element = document.createElement('div'),
 	labelContainer = document.createElement('div'),
@@ -18,7 +10,9 @@ input._createElements = function(id, label, type) {
 	this._createInputElement(id, label, type);
 	el.appendChild(labelContainer);
 	el.appendChild(inputContainer);
-};
+}
+
+var input = CmsxInput.prototype;
 
 input._createInputElement = function(id, label, type) {
 	var input = this._input = document.createElement('input');
@@ -53,10 +47,11 @@ input.get = function(values) {
 };
 
 function CmsxInitialInput(id, label, type) {
-	this._createElements(id, label, type);
+	CmsxInput.call(this, id, label, type);
 }
 
-utils.extend(CmsxInitialInput.prototype, input).set = function(values) {
+var initialInput = CmsxInitialInput.prototype = Object.create(input);
+initialInput.set = function(values) {
 	input.set.call(this, values);
 	this._input.disabled = values[this.id] !== undefined;
 };
@@ -65,7 +60,7 @@ utils.extend(CmsxInitialInput.prototype, input).set = function(values) {
 function CmsxPickableInput(id, label, type, onPick) {
 	this.setValue = this.setValue.bind(this);
 	this._handlePickClick = this._handlePickClick.bind(this, onPick);
-	this._createElements(id, label, type);
+	CmsxInput.call(this, id, label, type);
 	var btn = this._pickButton = document.createElement('a');
 	btn.title = 'pick';
 	btn.className = 'cmsx-button cmsx-button-pick';
@@ -73,7 +68,7 @@ function CmsxPickableInput(id, label, type, onPick) {
 	this._inputContainer.appendChild(btn);
 }
 
-var pickableInput = utils.extend(CmsxPickableInput.prototype, input);
+var pickableInput = CmsxPickableInput.prototype = Object.create(input);
 
 pickableInput._handlePickClick = function(onPick, evt) {
 	evt.preventDefault();
@@ -101,15 +96,13 @@ function CmsxFormButton(id, label, primary, callback) {
 	btn.className = 'cmsx-button' + (primary ? ' cmsx-primary' : '');
 	btn.addEventListener('click', this._handleClick);
 }
-var button = utils.extend(CmsxFormButton.prototype, input);
+var button = CmsxFormButton.prototype = Object.create(input);
 
 button._handleClick = function(callback, evt) {
 	callback(this.form, evt);
 };
 button.destroy = function() {
-	if (this._element.parentElement) {
-		this._element.parentElement.removeChild(this._element);
-	}
+	input.destroy.call(this);
 	this._element.removeEventListener('click', this._handleClick);
 };
 button.set = function() {};
@@ -156,8 +149,7 @@ form.add = function(input) {
 };
 
 form.remove = function(input) {
-	input = this._inputs[input.id];
-	input.destroy();
+	this._inputs[input.id].destroy();
 	delete this._inputs[input.id];
 	return this;
 };
@@ -165,6 +157,7 @@ form.remove = function(input) {
 form.mount = function(parentElement, form) {
 	this.form = form || this;
 	parentElement.appendChild(this._element);
+	return this;
 };
 
 form.destroy = function() {

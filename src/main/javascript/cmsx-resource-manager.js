@@ -10,7 +10,7 @@ function CmsxResourceManager(webdavClient, rootURL) {
 	utils.bindAll(this);
 	this.webdav = webdavClient;
 	this.rootURL = rootURL;
-	this.resourcePickerDialog = Dialog.createPool({preferredWidth: 500, preferredHeight: 500}, this.createResourceTreeView);
+	this.resourcePickerDialog = utils.lazy(this.createResourcePickerDialog);
 	this.resourceOptions = ContextMenu.options()
 		.add('rename', this.showResourceRenameDialog)
     	.add('move', this.showResourceMoveDialog)
@@ -28,6 +28,14 @@ manager.destroy = function() {
 	ConfirmDialog.destroy();
 };
 
+manager.createResourcePickerDialog = function() {
+	var dialog = new Dialog(),
+		treeView = this.createResourceTreeView().mount(dialog.contentElement());
+	dialog.tree = treeView;
+	dialog.onDestroy = treeView.destroy.bind(treeView);
+	return dialog;
+};
+
 manager.createResourceTreeView = function() {
 	var resourceTreeView = new TreeView(new TreeView.Features()
 		.itemClickable(this._handleResourceItemClick)
@@ -40,8 +48,8 @@ manager.createResourceTreeView = function() {
 	return resourceTreeView;
 };
 
-manager.pickResource = function(setter, currentValue) {
-	this.resourcePickerDialog.get().show().content.load(currentValue || null);
+manager.pickResource = function(evt, setter, currentValue) {
+	this.resourcePickerDialog.get().show(evt).tree.load(currentValue || null);
 };
 
 manager._loadCollection = function(treeView, href, selectHref) {
@@ -141,14 +149,14 @@ manager.showResourceMoveDialog = function(item) {
 	// TODO: 
 };
 
-manager.showResourceDeleteDialog = function(items) {
+manager.showResourceDeleteDialog = function(items, evt) {
 	if (items.length === undefined) items = [items];
 	else if (items.length === 0) return;
 	var labels = items.reduce(function(labels,item) {
 		return labels.length > 200 ? ', ...' : labels === '' ? item.label : labels + ', ' + item.label;
 	}, '');
 	var message = 'Do you really want to delete ' + labels + '?';
-	ConfirmDialog.confirm(message, this.deleteResources.bind(this, items));
+	ConfirmDialog.confirm(evt, message, this.deleteResources.bind(this, items));
 };
 
 manager.deleteResources = function(items) {
@@ -165,7 +173,7 @@ manager._handleCreateCollectionButtonClick = function(evt, treeView) {
 };
 
 manager._handleDeleteResources = function(evt, treeView) {
-	this.showResourceDeleteDialog(treeView.checked());
+	this.showResourceDeleteDialog(treeView.checked(), evt);
 };
 
 module.exports = CmsxResourceManager;

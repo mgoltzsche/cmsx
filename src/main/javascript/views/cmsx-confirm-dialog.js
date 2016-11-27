@@ -1,15 +1,15 @@
-var utils = require('../cmsx-utils.js');
 var Dialog = require('./cmsx-dialog.js');
 
 function ConfirmDialog() {
-	utils.bindAll(this);
-	this._dialog = Dialog.create();
-	var el = this._dialog.contentElement(),
+	Dialog.call(this, 'cmsx-dialog-layer-2 cmsx-confirm-dialog');
+	this._handleApplyClick = this._handleApplyClick.bind(this);
+	this._handleCancelClick = this._handleCancelClick.bind(this);
+	var el = this.contentElement(),
 		buttonsElement = document.createElement('div');
 	this._applyButton = document.createElement('a');
 	this._cancelButton = document.createElement('a');
 	this._messageElement = document.createElement('div');
-	this._applyButton.textContent = this.okayLabel;
+	this._applyButton.textContent = this.applyLabel;
 	this._cancelButton.textContent = this.cancelLabel;
 	buttonsElement.className = 'cmsx-buttons';
 	this._applyButton.className = 'cmsx-button cmsx-primary cmsx-button-apply';
@@ -20,27 +20,27 @@ function ConfirmDialog() {
 	buttonsElement.appendChild(this._cancelButton);
 	el.appendChild(this._messageElement);
 	el.appendChild(buttonsElement);
+	this.prefWidth = 600;
 }
 
-var confirm = ConfirmDialog.prototype;
+var base = Dialog.prototype,
+	confirm = ConfirmDialog.prototype = Object.create(base);
 
-confirm.okayLabel = 'okay';
-confirm.cancelLabel = 'cancel';
+confirm.applyLabel = 'yes';
+confirm.cancelLabel = 'no';
 
 confirm.destroy = function() {
+	base.destroy.call(this);
 	this._applyButton.removeEventListener('click', this._handleApplyClick);
 	this._cancelButton.removeEventListener('click', this._handleCancelClick);
-	this._dialog.destroy();
-	this._listView.destroy();
 	this._applyCallback = this._cancelCallback = null;
-	delete this._dialog;
 };
 
-confirm.confirm = function(message, applyCallback, cancelCallback, evt) {
-	this._messageElement.textContent = message;
+confirm.show = function(evt, message, applyCallback, cancelCallback) {
+	this._messageElement.textContent = message || '';
 	this._applyCallback = applyCallback || this._fallback;
 	this._cancelCallback = cancelCallback || this._fallback;
-	this._dialog.show(evt);
+	base.show.call(this, evt);
 };
 
 confirm._fallback = function() {};
@@ -49,7 +49,7 @@ confirm._handleApplyClick = function(evt) {
 	var callback = this._applyCallback;
 	this._applyCallback = this._cancelCallback = null;
 	evt.preventDefault();
-	this._dialog.hide();
+	this.hide();
 	callback(evt);
 };
 
@@ -57,26 +57,10 @@ confirm._handleCancelClick = function(evt) {
 	var callback = this._cancelCallback;
 	this._applyCallback = this._cancelCallback = null;
 	evt.preventDefault();
-	this._dialog.hide();
+	this.hide();
 	callback(evt);
 };
 
-ConfirmDialog.confirm = function(message, applyCallback, cancelCallback, evt) {
-	if (!this._instance) {
-		this._instance = new this();
-		this._instance.destroy = function(destroy) {
-			var dialog = this._instance;
-			this._instance = null;
-			destroy.call(dialog);
-		}.bind(this, this._instance.destroy);
-	}
-
-	this._instance.confirm(message, applyCallback, cancelCallback, evt);
-	return this._instance;
-}.bind(ConfirmDialog);
-
-ConfirmDialog.destroy = function() {
-	if (this._instance) {this._instance.destroy();}
-}.bind(ConfirmDialog);
-
+ConfirmDialog.confirm = Dialog.show;
+ConfirmDialog.destroy = Dialog.destroy;
 module.exports = ConfirmDialog;

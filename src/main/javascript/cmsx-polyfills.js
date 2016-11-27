@@ -2,13 +2,12 @@ var debug = !!window.location.href.match(/(\?|&)debug=1(&|#|$)/);
 
 // TODO: choose debug impl only if flag set
 Function.prototype.bind = function(thisObj) {
-	var boundArgs = Array.prototype.slice.call(arguments, 1),
-		fn = this;
+	var boundArgs = Array.prototype.slice.call(arguments, 1), fn = this;
 	return function() {
 		var args = boundArgs.concat(Array.prototype.slice.call(arguments));
 		try {
 			return fn.apply(thisObj, args);
-		} catch(err) {
+		} catch (err) {
 			if (!err._cmsxReported) {
 				err._cmsxReported = true;
 				var stack = err.stack ? '\n' + err.stack : '';
@@ -22,6 +21,23 @@ Function.prototype.bind = function(thisObj) {
 	};
 };
 
+if (typeof Object.create != 'function') {
+	Object.create = (function(undefined) {
+		var Temp = function() {};
+		return function(prototype, propertiesObject) {
+			if (prototype !== Object(prototype) && prototype !== null) {
+				throw TypeError('Argument must be an object, or null');
+			}
+			Temp.prototype = prototype || {};
+			if (propertiesObject !== undefined) {
+				Object.defineProperties(Temp.prototype, propertiesObject);
+			}
+			var result = new Temp();
+			Temp.prototype = null;
+			return result;
+		};
+	})();
+}
 
 if (!Array.prototype.map) {
 	Array.prototype.map = function(callback, thisArg) {
@@ -42,23 +58,23 @@ if (!Array.prototype.reduce) {
 	};
 }
 
-//if (!Array.prototype.filter) {
-	Array.prototype.filter = function(callback, thisArg) {
-		var i, item, filtered = [];
-		for (i = 0; i < this.length; i++) {
-			item = this[i];
-			if (callback.call(thisArg, item, i, this)) {
-				filtered.push(item);
-			}
+// if (!Array.prototype.filter) {
+Array.prototype.filter = function(callback, thisArg) {
+	var i, item, filtered = [];
+	for (i = 0; i < this.length; i++) {
+		item = this[i];
+		if (callback.call(thisArg, item, i, this)) {
+			filtered.push(item);
 		}
-		return filtered;
-	};
-//}
+	}
+	return filtered;
+};
+// }
 
-//if (!Array.prototype.forEach) {
-	Array.prototype.forEach = function(callback, thisArg) {
-		for (var i = 0; i < this.length; i++) {
-			callback.call(thisArg, this[i], i, this);
-		}
-	};
-//}
+// if (!Array.prototype.forEach) {
+Array.prototype.forEach = function(callback, thisArg) {
+	for (var i = 0; i < this.length; i++) {
+		callback.call(thisArg, this[i], i, this);
+	}
+};
+// }

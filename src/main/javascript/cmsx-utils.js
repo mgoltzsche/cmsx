@@ -25,6 +25,29 @@ utils.extend = function(dest, srcObjects) {
 	return dest;
 };
 
+function LazyInitializer(initializer) {
+	this._initializer = initializer;
+}
+
+LazyInitializer.prototype.get = function() {
+	if (!this._instance) {
+		this._instance = this._initializer();
+	}
+
+	return this._instance;
+};
+
+LazyInitializer.prototype.destroy = function() {
+	if (this._instance) {
+		this._instance.destroy();
+		delete this._instance;
+	}
+};
+
+utils.lazy = function(initializer) {
+	return new LazyInitializer(initializer);
+};
+
 /*var decorate = function(decoratorFn, superFn) {
 	return function() {
 		decoratorFn.apply(this, [superFn].concat(Array.prototype.slice.call(arguments)));
