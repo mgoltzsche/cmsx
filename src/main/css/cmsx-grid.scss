@@ -1,0 +1,19 @@
+/** vertical grid */
+.cmsx-vgrid {
+	position: relative;
+	height: 100%;
+	overflow: hidden;
+
+	.cmsx-vgrid-content {
+		height: calc(100% - 1.5em);
+		max-height: 100%;
+	}
+
+	.cmsx-vgrid-footer {
+		height: 1.5em;
+	}
+}
+
+.cmsx-align-center {
+	text-align: center;
+}

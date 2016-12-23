@@ -14,6 +14,7 @@ $animationLength: 0.3s;
 @import "medium-editor.scss";
 @import "_icons.generated.scss";
 @import "mixins.scss";
+@import "cmsx-grid.scss";
 @import "cmsx-buttons.scss";
 @import "cmsx-overlay.scss";
 @import "cmsx-dialog.scss";
@@ -60,4 +61,8 @@ a {
 	&:hover, &:focus, &:active {
 		text-decoration: underline;
 	}
+}
+
+.cmsx-transition {
+	visibility: hidden !important;
 }

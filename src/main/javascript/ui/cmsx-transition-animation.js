@@ -13,21 +13,21 @@ transition.setClassName = function(className) {
 	this._className = className;
 };
 
-transition.setTransitionClassName = function(transitionClassName) {
-	this._transitionClassName = transitionClassName;
+transition.setTransition = function(transition) {
+	this._transition = transition;
 };
 
 transition.update = function() {
-	var transition = this._transitionClassName;
-	this._element.className = this._className + ' ' + (transition ? transition : 'cmsx-animate');
-	this.onUpdate(this._element, this._transitionClassName);
+	var animation = this._transition ? ' cmsx-transition ' + this._transition : ' cmsx-animate';
+	this._element.className = this._className + animation;
+	this.onUpdate(this._element, this._transition);
 
 	if (transition) {
-		this._transitionClassName = null;
+		this._transition = null;
 		window.setTimeout(this.update);
 	}
 };
 
-transition.onUpdate = function(element) {};
+transition.onUpdate = function(element, transition) {};
 
 module.exports = CmsxTransitionAnimation;

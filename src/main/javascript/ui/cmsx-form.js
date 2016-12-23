@@ -72,7 +72,7 @@ var pickableInput = CmsxPickableInput.prototype = Object.create(input);
 
 pickableInput._handlePickClick = function(onPick, evt) {
 	evt.preventDefault();
-	onPick(this.setValue, this._value || '');
+	onPick(evt, this._value || '', this.setValue);
 };
 
 pickableInput.setValue = function(value) {
@@ -139,6 +139,7 @@ form.addButton = function(label, primary, callback) {
 	return this;
 };
 
+// TODO: refactor to pass component
 form.add = function(input) {
 	if (this._inputs[input.id])
 		throw 'Cannot add input with duplicate ID: ' + input.id;
@@ -154,10 +155,8 @@ form.remove = function(input) {
 	return this;
 };
 
-form.mount = function(parentElement, form) {
-	this.form = form || this;
-	parentElement.appendChild(this._element);
-	return this;
+form.element = function() {
+	return this._element;
 };
 
 form.destroy = function() {

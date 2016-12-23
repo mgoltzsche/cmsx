@@ -4,8 +4,8 @@
  *   input event:      not in Opera Mini, IE>=11, FF49, Safari/iOS Safari 10, Chrome 53
  *   classList:        not in Opera Mini, IE>=11, FF49, Safari/iOS Safari 10, Chrome 53
  *     (IE11: doesn't support multiple args on toggle(), add(), remove(); doesn't work with svg)
- *   addEventListener: IE>=11, FF49, Safari/iOS Safari 10, Chrome 53
- *   JSON:             IE>=11, FF49, Safari/iOS Safari 10, Chrome 53
+ *   addEventListener: IE>=9, FF2, Safari/iOS Safari 10, Chrome 4
+ *   JSON:             IE>=9, FF3.5, Safari/iOS Safari 10, Chrome 4
  *     (in IE 8 only if document is in IE 8 standards mode)
  */
 

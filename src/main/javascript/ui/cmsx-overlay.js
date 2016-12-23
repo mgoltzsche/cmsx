@@ -1,4 +1,5 @@
 var TransitionAnimation = require('./cmsx-transition-animation.js');
+var CmsxContainer = require('./cmsx-container.js');
 
 /**
  * Constructs a fixed positioned overlay that hides on document click.
@@ -6,6 +7,9 @@ var TransitionAnimation = require('./cmsx-transition-animation.js');
  * @param className additional class name that should be set on root element
  */
 function Overlay(className) {
+	CmsxContainer.call(this, 'div');
+	this.show = this.show.bind(this);
+	this.hide = this.hide.bind(this);
 	this.update = this.update.bind(this);
 	this._handleResize = this._handleResize.bind(this);
 	this._handleElementClick = this._handleElementClick.bind(this);
@@ -17,14 +21,14 @@ function Overlay(className) {
 	this.minMarginX = typeof this.minMarginX === 'number' ? this.minMarginX : 40;
 	this.minMarginY = typeof this.minMarginY === 'number' ? this.minMarginY : 40;
 	this._alignHorizontal = this._alignVertical = 'center';
-	var el = this._element = document.createElement('div');
-	el.style.position = 'fixed';
-	this._transition = new TransitionAnimation(el, this.updatePosition.bind(this));
+	this._element.style.position = 'fixed';
+	this._transition = new TransitionAnimation(this._element, this.updatePosition.bind(this));
 	this.update();
 	document.body.appendChild(this._element);
 }
 
-var overlay = Overlay.prototype;
+var base = CmsxContainer.prototype;
+var overlay = Overlay.prototype = Object.create(base);
 
 overlay._axis = [
 	{
@@ -41,12 +45,7 @@ overlay._axis = [
 
 overlay.destroy = function() {
 	this.hide();
-	document.body.removeChild(this._element);
-	this._element = null;
-};
-
-overlay.contentElement = function() {
-	return this._element;
+	base.destroy.call(this);
 };
 
 overlay.show = function(evt) {
@@ -66,14 +65,14 @@ overlay.show = function(evt) {
 overlay.hide = function() {
 	if (this._visible === true) {
 		this._visible = false;
-		this._hide();
+		this._hide.apply(this, arguments); // arguments required in sub types that want to react on every hide action like background click 
 		this.update();
 	}
 	return this;
 };
 
 overlay._show = function() {
-	this._transition.setTransitionClassName('cmsx-overlay-transition-show');
+	this._transition.setTransition('cmsx-overlay-transition-show');
 	this._element.addEventListener('click', this._handleElementClick);
 	document.body.addEventListener('click', this._handleDocumentClick);
 	document.body.addEventListener('keyup', this._handleKeyUp);

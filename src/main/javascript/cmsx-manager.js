@@ -4,11 +4,11 @@ var saveExt = require('./cmsx-editor-save-extension.js');
 var CmsxService = require('./services/cmsx-service.js');
 var CmsxPageService = require('./services/cmsx-page-service.js');
 var WebDavClient = require('./services/webdav-client.js');
-var toolbar = require('./views/cmsx-site-toolbar.js');
-var ContextMenu = require('./views/cmsx-context-menu.js');
-var TreeView = require('./views/cmsx-tree-view.js');
-var CmsxPageManager = require('./cmsx-page-manager.js');
-var CmsxResourceManager = require('./cmsx-resource-manager.js');
+var toolbar = require('./ui/cmsx-site-toolbar.js');
+var ContextMenu = require('./ui/cmsx-context-menu.js');
+var TreeView = require('./ui/cmsx-tree-view.js');
+var CmsxPageList = require('./ui/cmsx-page-list.js');
+var CmsxResourceList = require('./ui/cmsx-resource-list.js');
 
 function ContentSyncManager(onChanged) {
 	this._handler = onChanged;
@@ -60,9 +60,9 @@ function CmsxManager() {
 	var rootURL = '',
 		pageService = new CmsxPageService(rootURL),
 		contentService = new CmsxService(rootURL),
-		webdav = new WebDavClient('admin', 'admin');
-	this.resourceManager = new CmsxResourceManager(webdav, '/webdav');
-	this.pageManager = new CmsxPageManager(pageService, this.resourceManager.pickResource);
+		webdav = new WebDavClient('/webdav', 'admin', 'admin');
+	this.resourceList = new CmsxResourceList(webdav); // TODO: init lazy
+	this.pageList = new CmsxPageList(pageService, this.pickResource);
 	this.syncService = new ContentSyncManager(function(contentService, changes) {
 		for (var i = 0; i < changes.length; i++) {
 			var c = changes[i];
@@ -119,16 +119,18 @@ function CmsxManager() {
 
 	// Setup toolbar
 	var content1 = document.createElement('div');
+	var content2 = document.createElement('div');
 	var pageBrowserButton = new toolbar.CmsxToolbarContent('pages', content1, function(element) {
 		if (element.childNodes.length === 0) {
-			this.pageManager.createPageTreeView().mount(element).load();
+			// TODO: refactor so that components can be passed to site-toolbar
+			this.pageList.load();
+			element.appendChild(this.pageList.element());
 		}
 	}.bind(this, content1));
-
-	var content2 = document.createElement('div');
 	var resourceBrowserButton = new toolbar.CmsxToolbarContent('resources', content2, function(element) {
 		if (element.childNodes.length === 0) {
-			this.resourceManager.createResourceTreeView().mount(element).load();
+			this.resourceList.load();
+			element.appendChild(this.resourceList.element());
 		}
 	}.bind(this, content2));
 	new toolbar.CmsxToolbar([pageBrowserButton, resourceBrowserButton]);
@@ -136,11 +138,17 @@ function CmsxManager() {
 
 var manager = CmsxManager.prototype;
 
+manager.pickResource = function(evt, currentValue, callback) {
+	this.resourceList.pickResource(evt, currentValue, callback);
+};
+
 manager.destroy = function() {
-	this.pageManager.destroy();
-	this.resourceManager.destroy();
-	delete this.pageManager;
-	delete this.resourceManager;
+	this.pageList.destroy();
+	this.resourceList.destroy();
+	delete this.pageList;
+	delete this.resourceList;
+	ContextMenu.destroy();
+	ConfirmDialog.destroy();
 };
 
 module.exports = CmsxManager;

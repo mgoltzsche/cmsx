@@ -1,6 +1,5 @@
 function ListView(toolbarSupported, features, items) {
 	this.toolbarSupported = !!toolbarSupported;
-	this.context = this;
 	this._element = document.createElement('div');
 	this._element.className = 'cmsx-list-container';
 	this._listElement = document.createElement('ul');
@@ -18,9 +17,8 @@ function ListView(toolbarSupported, features, items) {
 
 var list = ListView.prototype;
 
-list.mount = function(parentElement) {
-	parentElement.appendChild(this._element);
-	return this;
+list.element = function() {
+	return this._element;
 };
 
 list.destroy = function() {
@@ -35,7 +33,7 @@ list.setItems = function(items) {
 	if (this._items === items) return;
 
 	this._items = items;
-	var itemView, i, li, a;
+	var itemView, i, li, a, item;
 
 	for (i = 0; i < items.length; i++) {
 		if (this._itemViews.length - 1 < i) {
@@ -49,8 +47,11 @@ list.setItems = function(items) {
 		}
 
 		// Update item elements
-		itemView.item = items[i];
-		this._itemRenderer.updateItem(itemView);
+		item = items[i];
+		if (itemView.item !== item) {
+			itemView.item = item;
+			this._itemRenderer.updateItem(itemView);
+		}
 	}
 
     // Remove unused item elements
@@ -63,6 +64,16 @@ list.setItems = function(items) {
 
 		this._itemViews = this._itemViews.slice(0, items.length);
 	}
+};
+
+list.getItemIndex = function(element) {
+	while (element) {
+		if ((' ' + element.className + ' ').indexOf(' cmsx-list-item ') > -1) {
+			return parseInt(element.getAttribute('data-item'));
+		}
+		element = element.parentElement;
+	}
+	throw 'Item element not found for given element: ' + element;
 };
 
 list.toolbar = function() {
@@ -128,7 +139,7 @@ linkDecorator._handleItemClick = function(evt) {
 		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item;
 	evt.preventDefault();
 	this._listView.clickedItem = item;
-	this._onItemClick(item, evt, this._listView.context);
+	this._onItemClick(evt, item);
 };
 
 
@@ -164,7 +175,7 @@ optionsDecorator._handleItemButtonClick = function(evt) {
 	var el = evt.target || evt.srcElement,
 		item = this._listView._itemViews[el.parentElement.getAttribute('data-item')].item;
 	evt.preventDefault();
-	this._onItemButtonClick(item, evt, this._listView.context);
+	this._onItemButtonClick(evt, item);
 };
 
 
@@ -274,6 +285,106 @@ checkboxDecorator._update = function() {
 };
 
 
+function ListItemOrderableRenderer(delegate, listView, onItemOrderChanged) {
+	this._delegate = delegate;
+	this._listView = listView;
+	this._onItemOrderChanged = onItemOrderChanged;
+	this._handleItemMouseUp = this._handleItemMouseUp.bind(this);
+	this._handleItemMouseOver = this._handleItemMouseOver.bind(this);
+	this._handleItemDragStart = this._handleItemDragStart.bind(this);
+	this._handleDocumentMouseUp = this._handleDocumentMouseUp.bind(this);
+	this._dragIndex = null;
+}
+
+var orderableDecorator = ListItemOrderableRenderer.prototype;
+
+orderableDecorator.createItem = function(itemView) {
+	this._delegate.createItem(itemView);
+	itemView.element.setAttribute('data-item', itemView.index);
+	itemView.drag = document.createElement('span');
+	itemView.drag.textContent = '#';
+	itemView.drag.className = 'cmsx-item-drag';
+	itemView.drag.addEventListener('mousedown', this._handleItemDragStart);
+	itemView.element.addEventListener('mouseover', this._handleItemMouseOver);
+	itemView.element.addEventListener('mouseup', this._handleItemMouseUp);
+	itemView.element.appendChild(itemView.drag);
+};
+
+orderableDecorator.updateItem = function(itemView) {
+	this._delegate.updateItem(itemView);
+};
+
+orderableDecorator.destroyItem = function(itemView) {
+	this._delegate.destroyItem(itemView);
+	itemView.drag.removeEventListener('mousedown', this._handleItemDragStart);
+	itemView.element.removeEventListener('mouseover', this._handleItemMouseOver);
+	itemView.element.removeEventListener('mouseup', this._handleItemMouseUp);
+};
+
+orderableDecorator._handleItemDragStart = function(evt) {
+	evt = evt || window.event;
+	var el = evt.target || evt.srcElement,
+		itemIndex = parseInt(el.parentElement.getAttribute('data-item'));
+	this._origItems = this._listView._items; // TODO: set back after failed move
+	evt.preventDefault();
+
+	this._dragIndex = itemIndex;
+	this._dropIndex = null;
+	document.addEventListener('mouseup', this._handleDocumentMouseUp);
+};
+
+orderableDecorator._handleItemMouseOver = function(evt) {
+	if (this._dragIndex === null) return;
+	evt = evt || window.event;
+	var itemIndex = this._listView.getItemIndex(evt.target || evt.srcElement);
+	if (itemIndex !== this._dropIndex) {
+		this._dropIndex = itemIndex;
+		this._moveItem();
+	}
+};
+
+orderableDecorator._handleItemMouseUp = function(evt) {
+	if (this._dragIndex === null) return;
+	evt = evt || window.event;
+	evt.preventDefault();
+	evt.stopPropagation();
+	this._dropIndex = this._listView.getItemIndex(evt.target || evt.srcElement);
+	if (this._moveItem() && this._dropIndex !== this._dragIndex) {
+		this._onItemOrderChanged(this._listView._items, this._dropIndex);
+	} else {
+		this._listView.setItems(this._origItems);
+	}
+	this._dragIndex = this._dropIndex = this._origItems = null;
+	document.removeEventListener('mouseup', this._handleDocumentMouseUp);
+};
+
+orderableDecorator._handleDocumentMouseUp = function(evt) {
+	this._listView.setItems(this._origItems);
+	this._dragIndex = this._dropIndex = this._origItems = null;
+	document.removeEventListener('mouseup', this._handleDocumentMouseUp);
+};
+
+orderableDecorator._moveItem = function() {
+	var i, items = this._origItems, newItems = [],
+		itemPos = this._dragIndex, itemDestPos = this._dropIndex, item = items[itemPos];
+	if (itemDestPos === null || !item) return false;
+	itemDestPos = itemDestPos > itemPos ? itemDestPos + 1 : itemDestPos;
+	for (i = 0; i < items.length; i++) {
+		if (itemDestPos === i) {
+			newItems.push(item);
+		}
+		if (itemPos !== i) {
+			newItems.push(items[i]);
+		}
+	}
+	if (itemDestPos >= items.length) {
+		newItems.push(item);
+	}
+	this._listView.setItems(newItems);
+	return true;
+};
+
+
 function ListFeatures(apply) {
 	if (apply) this.apply = apply;
 }
@@ -310,6 +421,13 @@ ListFeatures.prototype.itemCheckable = function() {
 	}.bind(undefined, this.apply));
 };
 
+ListFeatures.prototype.orderable = function(onOrderChange) {
+	return new ListFeatures(function(apply, listView) {
+		listView._itemRenderer = new ListItemOrderableRenderer(listView._itemRenderer, listView, onOrderChange);
+		apply(listView);
+	}.bind(undefined, this.apply));
+};
+
 ListFeatures.prototype.toolbarButton = function(label, callback, className) {
 	return new ListFeatures(function(apply, listView) {
 		apply(listView);
@@ -321,7 +439,7 @@ ListFeatures.prototype.toolbarButton = function(label, callback, className) {
 			clickHandler = function(evt) {
 				evt = evt || window.event;
 				evt.preventDefault();
-				callback(evt, listView.context);
+				callback(evt);
 			};
 
 		if (!listView._buttonBar) { // Create button bar

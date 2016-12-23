@@ -16,7 +16,8 @@ var resolveUrl = function(url) {
 	}
 };
 
-function WebDavClient(user, password) {
+function WebDavClient(rootURL, user, password) {
+	this._rootURL = rootURL;
 	this._defaultErrorHandler = function(xhr) {alert('WebDAV request failed with HTTP status code ' + xhr.status + '!');};
 	this._uploadWorker = null;
 	this._uploadQueue = [];
@@ -60,8 +61,8 @@ function WebDavClient(user, password) {
 
 var webdav = WebDavClient.prototype;
 
-webdav.propfind = function(path, depth, callback, errorCallback) {
-	this._request('PROPFIND', path, {
+webdav.davPropfind = function(path, depth, callback, errorCallback) {
+	this._request('PROPFIND', this._rootURL + path, {
 		success: function(callback, xhr) {
 			callback(this._parsePropfindResult(xhr));
 		}.bind(this, callback),
@@ -74,47 +75,47 @@ webdav.propfind = function(path, depth, callback, errorCallback) {
 	});
 };
 
-webdav.mkcol = function(path, callback, errorCallback) {
-	this._request('MKCOL', path, {
+webdav.davMkcol = function(path, callback, errorCallback) {
+	this._request('MKCOL', this._rootURL + path, {
+		success: callback.bind(undefined, path),
+		error: errorCallback
+	});
+};
+
+webdav.davGet = function(path, callback, errorCallback) {
+	this._request('GET', this._rootURL + path, {
 		success: callback,
 		error: errorCallback
 	});
 };
 
-webdav.get = function(path, callback, errorCallback) {
-	this._request('GET', path, {
-		success: callback,
+webdav.davDelete = function(path, callback, errorCallback) {
+	this._request('DELETE', this._rootURL + path, {
+		success: callback.bind(undefined, path),
 		error: errorCallback
 	});
 };
 
-webdav.delete = function(path, callback, errorCallback) {
-	this._request('DELETE', path, {
-		success: callback,
-		error: errorCallback
-	});
-};
-
-webdav.move = function(path, destination, callback, errorCallback) {
+webdav.davMove = function(path, destination, callback, errorCallback) {
 	// See http://www.webdav.org/specs/rfc2518.html#rfc.section.8.9.2
 	// Required to move collection but fails with Bad request on collection move if locking supported.
 	// Lock on source and destination has to be acquired first.
 	//.setRequestHeader('Depth', 'Infinity')
 
-	this._request('MOVE', path, {
-		success: callback,
+	this._request('MOVE', this._rootURL + path, {
+		success: callback.bind(undefined, path, destination),
 		error: errorCallback,
 		headers: {
-			'Destination': destination
+			'Destination': this._rootURL + destination
 		}
 	});
 };
 
-webdav.put = function(path, data, callback, errorCallback, progressCallback) {
+webdav.davPut = function(path, data, callback, errorCallback, progressCallback) {
 	var uploadInfo = {
-		url: resolveUrl(path),
+		url: resolveUrl(this._rootURL + path),
 		data: data,
-		onSuccess: callback,
+		onSuccess: callback.bind(undefined, path),
 		onError: errorCallback,
 		onProgress: progressCallback
 	};
@@ -145,8 +146,8 @@ webdav._onUploadFinished = function(upload) {
 	delete this._pendingUploads[upload.url];
 
 	if (--this._pendingUploadCount === 0 && this._uploadWorker !== null) { // Last upload. Stop worker
-		this._uploadWorker.terminate();
-		this._uploadWorker = null;
+		this._uploadWorker.destroy();
+		delete this._uploadWorker;
 	} else if (this._uploadQueue.length > 0) { // Start next queued upload
 		this._upload(this._uploadQueue.pop());
 	}
@@ -185,7 +186,7 @@ webdav._newUploadProgressListener = function(upload) {
 };
 
 webdav._putWithWorker = function(upload) {
-	if (this._uploadWorker === null)
+	if (!this._uploadWorker)
 		this._uploadWorker = new UploadWorkerManager();
 
 	this._uploadWorker.upload('PUT', upload.url, upload.data,
@@ -230,7 +231,7 @@ webdav._parsePropfindResult = function(xhr) {
 			var responseChild = response.childNodes[j];
 
 			if (responseChild.nodeName.toLowerCase() === 'd:href') {
-				doc.href = this._normalizeHref(responseChild.textContent);
+				doc.href = this._normalizeHref(responseChild.textContent).substring(this._rootURL.length);
 			} else if (responseChild.nodeName.toLowerCase() === 'd:status') {
 				doc.status = responseChild.textContent;
 			} else if (responseChild.nodeName.toLowerCase() === 'd:propstat') {
@@ -268,6 +269,7 @@ webdav._parsePropfindResult = function(xhr) {
 	return docs;
 };
 
+
 function UploadWorkerManager(uploadLimit) {
 	this._uploadLimit = uploadLimit || 1;
 	this._pendingUploads = {};
@@ -277,40 +279,8 @@ function UploadWorkerManager(uploadLimit) {
 	var work = require('webworkify');
 	var uploadWorker = require('./upload-worker.js');
 	var w = this._worker = work(uploadWorker);
-
-	// Set listeners 
-	w.onmessage = function(evt) {
-		var data = evt.data;
-
-		try {
-			switch(data.type) {
-				case 'upload-success':
-					this._pendingUploads[data.url].onSuccess();
-					delete this._pendingUploads[data.url];
-					this._pendingUploadCount--;
-					break;
-				case 'upload-progress':
-					this._pendingUploads[data.url].onProgress(data.loaded, data.total);
-					break;
-				case 'upload-failed':
-					log.error('Upload ' + data.url + ' failed with status code ' + data.status);
-					this._pendingUploads[data.url].onError(data.status);
-					delete this._pendingUploads[data.url];
-					this._pendingUploadCount--;
-					break;
-				case 'log':
-					this._workerLog.log(data.level, data.msg);
-					break;
-				default:
-					this._log.debug("Unsupported message type '" + data.type + "' received from UploadWorker");
-			}
-		} catch(e) {
-			this._log.error('Error message processor: ' + data.type);
-		}
-	}.bind(this);
-	w.onerror = function(e) {
-		this._log.error('Worker failure', e);
-	};
+	w.onmessage = this.processWorkerMessage.bind(this);
+	w.onerror = this.handleWorkerError.bind(this);
 }
 
 UploadWorkerManager.isSupported = function() {
@@ -318,8 +288,40 @@ UploadWorkerManager.isSupported = function() {
 };
 
 var uploadManager = UploadWorkerManager.prototype;
-uploadManager._log = createLogger('UploadWorkerManager');
-uploadManager._workerLog = createLogger('UploadWorker');
+
+uploadManager.processWorkerMessage = function(evt) {
+	var data = evt.data;
+
+	try {
+		switch(data.type) {
+			case 'upload-success':
+				this._pendingUploads[data.url].onSuccess();
+				delete this._pendingUploads[data.url];
+				this._pendingUploadCount--;
+				break;
+			case 'upload-progress':
+				this._pendingUploads[data.url].onProgress(data.loaded, data.total);
+				break;
+			case 'upload-failed':
+				//log.error('Upload ' + data.url + ' failed with status code ' + data.status);
+				this._pendingUploads[data.url].onError(data.status);
+				delete this._pendingUploads[data.url];
+				this._pendingUploadCount--;
+				break;
+			case 'log':
+				throw 'Worker: ' + data.level + ': ' + data.msg;
+			default:
+				throw "Unsupported message type '" + data.type + "' received from UploadWorker";
+		}
+	} catch(e) {
+		throw 'Error in message processor ' + data.type + ': ' + e;
+	}
+};
+
+uploadManager.handleWorkerError = function(e) {
+	throw 'Worker failure: ' + e;
+};
+
 uploadManager.upload = function(method, url, data, onSuccess, onError, onProgress) {
 	url = resolveUrl(url);
 
@@ -341,7 +343,8 @@ uploadManager.upload = function(method, url, data, onSuccess, onError, onProgres
 
 	return true;
 };
-uploadManager.terminate = function() {
+
+uploadManager.destroy = function() {
 	this._worker.terminate();
 	this._worker = null;
 };

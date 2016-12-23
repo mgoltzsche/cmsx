@@ -4,35 +4,27 @@ var ListView = require('./cmsx-list-view.js');
 function ContextMenu(className) {
 	Overlay.call(this, 'cmsx-context-menu' + (className ? ' ' + className : ''));
 	this._handleOptionClick = this._handleOptionClick.bind(this);
-	this._listView = new ListView(false, new ListView.Features()
-		.itemClickable(this._handleOptionClick))
-		.mount(this.contentElement());
+	this._list = new ListView(false, new ListView.Features()
+		.itemClickable(this._handleOptionClick));
+	this.add(this._list);
 }
 
 var base = Overlay.prototype,
 	contextMenu = ContextMenu.prototype = Object.create(base);
 
-contextMenu.destroy = function() {
-	base.destroy.call(this);
-	this._listView.destroy();
-	delete this._listView;
-};
-
 contextMenu.show = function(evt, context, options) {
-	this._listView.setItems(options);
+	this._list.setItems(options);
 	this._context = context;
-	base.show.call(this, evt);
-	return this;
+	return base.show.call(this, evt);
 };
 
 contextMenu.hide = function() {
 	this._context = null;
-	base.hide.call(this);
-	return this;
+	return base.hide.call(this);
 };
 
-contextMenu._handleOptionClick = function(option, evt) {
-	option.callback(this._context, evt);
+contextMenu._handleOptionClick = function(evt, option) {
+	option.callback(evt, this._context);
 	this.hide();
 };
 

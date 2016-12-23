@@ -22,18 +22,13 @@ Function.prototype.bind = function(thisObj) {
 };
 
 if (typeof Object.create != 'function') {
-	Object.create = (function(undefined) {
-		var Temp = function() {};
-		return function(prototype, propertiesObject) {
-			if (prototype !== Object(prototype) && prototype !== null) {
-				throw TypeError('Argument must be an object, or null');
-			}
-			Temp.prototype = prototype || {};
-			if (propertiesObject !== undefined) {
-				Object.defineProperties(Temp.prototype, propertiesObject);
-			}
-			var result = new Temp();
-			Temp.prototype = null;
+	Object.create = (function() {
+		var Copy = function() {};
+		return function(proto) {
+			if (arguments.length > 1) throw 'Basic Object.create polyfill: 2nd argument unsupported';
+			Copy.prototype = proto || {};
+			var result = new Copy();
+			Copy.prototype = null;
 			return result;
 		};
 	})();
@@ -58,23 +53,23 @@ if (!Array.prototype.reduce) {
 	};
 }
 
-// if (!Array.prototype.filter) {
-Array.prototype.filter = function(callback, thisArg) {
-	var i, item, filtered = [];
-	for (i = 0; i < this.length; i++) {
-		item = this[i];
-		if (callback.call(thisArg, item, i, this)) {
-			filtered.push(item);
+if (!Array.prototype.filter) {
+	Array.prototype.filter = function(callback, thisArg) {
+		var i, item, filtered = [];
+		for (i = 0; i < this.length; i++) {
+			item = this[i];
+			if (callback.call(thisArg, item, i, this)) {
+				filtered.push(item);
+			}
 		}
-	}
-	return filtered;
-};
-// }
+		return filtered;
+	};
+}
 
-// if (!Array.prototype.forEach) {
-Array.prototype.forEach = function(callback, thisArg) {
-	for (var i = 0; i < this.length; i++) {
-		callback.call(thisArg, this[i], i, this);
-	}
-};
-// }
+if (!Array.prototype.forEach) {
+	Array.prototype.forEach = function(callback, thisArg) {
+		for (var i = 0; i < this.length; i++) {
+			callback.call(thisArg, this[i], i, this);
+		}
+	};
+}

@@ -78,8 +78,8 @@ dialog._dialogRegistry = {
 		this.current = dialog;
 		this.active.push(dialog);
 	},
-	popActiveDialog: function() {
-		this.active.pop().hide();
+	popActiveDialog: function(evt) {
+		var dialog = this.active.pop();
 
 		if (this.active.length > 0) { // set last dialog active
 			this.current = this.active[this.active.length - 1];
@@ -88,10 +88,18 @@ dialog._dialogRegistry = {
 			this.current = null;
 			this.modalBackground.hide();
 		}
+
+		dialog.hide(evt);
 	},
-	handleModalClick: function() {
-		this.active[this.active.length - 1].hide();
+	handleModalClick: function(evt) {
+		this.active[this.active.length - 1].hide(evt);
 	}
+};
+
+dialog.prefSize = function(prefWidth, prefHeight) {
+	this.prefWidth = prefWidth;
+	this.prefHeight = prefHeight;
+	return this;
 };
 
 dialog.show = function(evt) {
@@ -104,10 +112,7 @@ dialog.show = function(evt) {
 dialog.destroy = function() {
 	base.destroy.call(this);
 	this._dialogRegistry.dialogDestroyed();
-	this.onDestroy();
 };
-
-dialog.onDestroy = function() {};
 
 dialog._show = function() {
 	base._show.call(this);
@@ -127,9 +132,14 @@ dialog._fullClassName = function() {
 };
 
 dialog.align = function(evt) {
-	evt = evt || window.event;
-	this.x = evt.clientX;
-	this.y = evt.clientY;
+	if (evt) {
+		evt = evt || window.event;
+		this.x = evt.clientX;
+		this.y = evt.clientY;
+	} else {
+		this.x = window.offsetWidth / 2;
+		this.y = window.offsetHeight / 2;
+	}
 };
 
 dialog.setActive = function(active) {
@@ -138,7 +148,7 @@ dialog.setActive = function(active) {
 };
 
 dialog._handleResize = function() {
-	this._transition.setTransitionClassName('cmsx-dialog-transition-resize');
+	this._transition.setTransition('cmsx-dialog-transition-resize');
 	this.resize();
 	this.alignCenter();
 	this.update();

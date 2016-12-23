@@ -1,6 +1,6 @@
 var ListView = require('./cmsx-list-view.js');
 
-function TreeView(features) {
+function TreeView(features, className) {
 	var ancestorFeatures = function() {
 		new ListView.Features().className('cmsx-tree-ancestors').apply(this);
 		features.apply(this);
@@ -11,17 +11,17 @@ function TreeView(features) {
 	};
 
 	this._element = document.createElement('div');
-	this._element.className = 'cmsx-tree';
-	this._ancestors = new ListView(false, ancestorFeatures).mount(this._element);
-	this._children = new ListView(true, childrenFeatures).mount(this._element);
-	this._ancestors.context = this._children.context = this;
+	this._element.className = 'cmsx-tree' + (className ? ' ' + className : '');
+	this._ancestors = new ListView(false, ancestorFeatures);
+	this._children = new ListView(true, childrenFeatures);
+	this._element.appendChild(this._ancestors.element());
+	this._element.appendChild(this._children.element());
 }
 
 var tree = TreeView.prototype;
 
-tree.mount = function(parentElement) {
-	parentElement.appendChild(this._element);
-	return this;
+tree.element = function() {
+	return this._element;
 };
 
 tree.destroy = function() {
@@ -45,14 +45,6 @@ tree.setChildren = function(children) {
 
 tree.checked = function() {
 	return this._children.checked();
-};
-
-tree._handleItemClick = function(onItemClick, item, evt) {
-	onItemClick(item, evt, this);
-};
-
-tree._handleItemOptions = function(onItemOptions, item, evt) {
-	onItemOptions(item, evt, this);
 };
 
 TreeView.Features = ListView.Features;

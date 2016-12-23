@@ -29,14 +29,18 @@
 }
 
 .cmsx-dialog {
-	position: fixed;
+	position: fixed !important;
 	z-index: 950;
-	padding: 10px;
+	padding: $margin;
 	background: $backgroundColor;
 	border: 1px solid $borderColor;
 	@include border-radius($borderRadius);
 	@include box-shadow(1px 3px 15px rgba(0,0,0,.5));
 	@include transform(translate(0,0) scale(1));
+
+	&.cmsx-overlay-visible {
+		@include transform(translate(0,0) scale(1));
+	}
 
 	&.cmsx-dialog-active {
 		z-index: 970;
@@ -47,11 +51,7 @@
 		z-index: 930;
 		opacity: 0.25;
 		@include box-shadow(1px 3px 5px rgba(0,0,0,.5));
-		@include transform(translate(0,0) scale(0.7));
-	}
-
-	&.cmsx-overlay-visible {
-		@include transform(translate(0,0) scale(1));
+		@include transform(translate(0,0) scale(0.9));
 	}
 
 	&.cmsx-overlay-hidden {
@@ -61,6 +61,7 @@
 	&.cmsx-overlay-transition-show {
 		&.cmsx-overlay-visible {
 			@include transform(translate(-50%,-50%) scale(0.001));
+			@include box-shadow(1px 3px 5px rgba(0,0,0,.5));
 		}
 
 		&.cmsx-dialog-active {
@@ -70,27 +71,33 @@
 
 	&.cmsx-animate {
 		&.cmsx-dialog-active, &.cms-overlay-visible {
-			@include transition(left $animationLength ease-out,
+			@include transition(visibility $animationLength ease-in,
+			left $animationLength ease-out,
 			top $animationLength ease-out,
 			opacity $animationLength ease-out,
-			visibility $animationLength ease-in,
 			transform $animationLength ease-out,
 			-moz-transform $animationLength ease-out,
 			-webkit-transform $animationLength ease-out,
 			-ms-transform $animationLength ease-out,
-			-o-transform $animationLength ease-out);
+			-o-transform $animationLength ease-out/*,
+			box-shadow $animationLength ease-out,
+			-webkit-box-shadow $animationLength ease-out,
+			-moz-box-shadow $animationLength ease-out*/);
 		}
 
 		&.cmsx-dialog-inactive, &.cms-overlay-hidden {
-			@include transition(left $animationLength ease-in,
+			@include transition(visibility $animationLength ease-in,
+			left $animationLength ease-in,
 			top $animationLength ease-in,
 			opacity $animationLength ease-in,
-			visibility $animationLength ease-in,
 			transform $animationLength ease-in,
 			-moz-transform $animationLength ease-in,
 			-webkit-transform $animationLength ease-in,
 			-ms-transform $animationLength ease-in,
-			-o-transform $animationLength ease-in);
+			-o-transform $animationLength ease-in/*,
+			box-shadow $animationLength ease-out,
+			-webkit-box-shadow $animationLength ease-out,
+			-moz-box-shadow $animationLength ease-out*/);
 		}
 	}
 
