@@ -16,9 +16,9 @@ function CmsxPageList(pageService, resourcePicker, className) {
 	this.pagePrefsDialog = utils.lazy(this.createPagePrefsDialog);
 	this.pageOptions = ContextMenu.options()
 		.add('edit', this.showPagePrefsDialog)
+		.add('move', this.showPageParentMoveDialog)
 		.add('delete', this.showPageDeleteDialog)
-		.add('add', this.showPageCreateDialog)
-		.add('pick', this.pickPage);
+		.add('add', this.showPageCreateDialog);
 	this.mediator = mediator.newLocalInstance('cmsx.page')
 		.event('updated', this.updatedPage)
 		.event('deleted', this.deletedPage)
@@ -72,13 +72,24 @@ pageList.load = function(pageID) {
 
 pageList.onPagesLoaded = function(page) {
 	page.parents.push(page);
-	this.treeView.setAncestors(page.parents.map(this.toPageViewModel));
-	this.treeView.setChildren(page.children.map(this.toPageViewModel));
+	var self = this, ancestors = [], parents = page.parents, parentID = '', i, parentPage;
+	/*if (parents.length > 0) {
+		ancestors.push(this.toPageViewModel(parents[0], ''));
+	}*/
+	for (i = 0; i < parents.length; i++) {
+		parentPage = parents[i];
+		ancestors.push(this.toPageViewModel(parentPage, parentID));
+		parentID += (parentPage.id || '') + '/';
+	}
+	this.treeView.setAncestors(ancestors);
+	this.treeView.setChildren(page.children.map(function(page) {
+		return self.toPageViewModel(page, parentID);
+	}));
 };
 
-pageList.toPageViewModel = function(page) {
+pageList.toPageViewModel = function(page, parentID) {
 	return {
-		id: page.id || '',
+		id: parentID + page.id,
 		label: page.title || page.id,
 		page: page
 	};
@@ -134,6 +145,15 @@ pageList.updatedPage = function(page) {
 	this.load(this.currentPageID);
 };
 
+pageList.showPageParentMoveDialog = function(evt, item) {
+	// TODO: resolve parent
+	this.pagePicker.get().pickPage(evt, item.id, this.requestParentMove.bind(this, item));
+};
+
+pageList.requestParentMove = function(item, evt, newParentID) {
+	this.pageService.movePageAsLast(item.id, newParentID, this.mediator.moved);
+};
+
 pageList.requestMove = function(pages, pageIndex) {
 	var pageID = pages[pageIndex].id;
 	if (pageIndex < pages.length - 1) {
@@ -146,7 +166,7 @@ pageList.requestMove = function(pages, pageIndex) {
 };
 
 pageList.movedPage = function(pageID, destContextPageID, mode) {
-	
+	this.load(this.currentPageID);
 };
 
 function CmsxPagePicker(pageService, resourcePicker) {
